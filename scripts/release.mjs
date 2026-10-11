@@ -19,8 +19,11 @@ const EXPECTED_REPO = 'github.com/2011126630z-commits/daily-checkin-originos';
 const PAGES_URL = 'https://2011126630z-commits.github.io/daily-checkin-originos/';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
+const isWin = process.platform === 'win32';
+
+// Windows 上 npm 是 npm.cmd，必须经过 shell 才能启动
 const run = (cmd, args, opts = {}) =>
-  spawnSync(cmd, args, { cwd: root, stdio: 'inherit', shell: false, ...opts });
+  spawnSync(cmd, args, { cwd: root, stdio: 'inherit', shell: isWin, ...opts });
 
 const capture = (cmd, args) => {
   const r = spawnSync(cmd, args, { cwd: root, encoding: 'utf8' });
