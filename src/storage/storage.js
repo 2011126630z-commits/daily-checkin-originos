@@ -98,13 +98,18 @@ function countCompleted(dayData) {
   return dayData ? dayData.filter(Boolean).length : 0;
 }
 
-// Get statistics (累计口径:只统计有记录的日期)
+// 有效打卡日:当天至少完成 1 项才算已打卡(全部取消后不再计入)
+export function isActiveDay(dayData) {
+  return countCompleted(dayData) > 0;
+}
+
+// Get statistics (累计口径:只统计至少完成 1 项的日期;全取消的日期不计入)
 export function getStatistics() {
   const data = getCheckinData();
-  const allDates = Object.keys(data);
-  const totalDays = allDates.length;
+  const activeDates = Object.keys(data).filter((date) => isActiveDay(data[date]));
+  const totalDays = activeDates.length;
   const totalTasks = totalDays * TASK_COUNT;
-  const completedTasks = allDates.reduce((sum, date) => {
+  const completedTasks = activeDates.reduce((sum, date) => {
     return sum + countCompleted(data[date]);
   }, 0);
 
@@ -114,6 +119,31 @@ export function getStatistics() {
     completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
     avgPerDay: totalDays > 0 ? Math.round(completedTasks / totalDays) : 0
   };
+}
+
+// 连续打卡天数:每天至少完成 1 项计为连续一天
+// 今天尚未打卡时,保留截至昨天的连续记录(不因今天未打卡而清零)
+export function getCurrentStreak() {
+  const data = getCheckinData();
+  const now = new Date();
+  let cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // 今天未打卡 → 从昨天开始回溯
+  if (!isActiveDay(data[formatLocalDate(cursor)])) {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+  }
+
+  let streak = 0;
+  // 理论上限 3650 天,防御死循环
+  for (let i = 0; i < 3650; i += 1) {
+    if (isActiveDay(data[formatLocalDate(cursor)])) {
+      streak += 1;
+      cursor = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() - 1);
+    } else {
+      break;
+    }
+  }
+  return streak;
 }
 
 // 本周统计:周一至周日 7 天,固定 7 列
@@ -231,4 +261,53 @@ export function getRecentRecords() {
 export function resetAllData() {
   localStorage.removeItem(STORAGE_KEY_CHECKIN);
   localStorage.removeItem(STORAGE_KEY_PROFILE);
+}
+
+// ---- 备份 / 恢复(不同来源的 localStorage 不互通,换网址时用此迁移) ----
+const BACKUP_VERSION = 2;
+const BACKUP_KEYS = ['checkinData', 'profile', 'weightRecords', 'weightUnit'];
+
+// 导出全部数据为 JSON 字符串
+export function exportBackup() {
+  const payload = {
+    app: 'daily-checkin-originos',
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    data: {}
+  };
+  for (const key of BACKUP_KEYS) {
+    const raw = localStorage.getItem(key);
+    if (raw != null) {
+      try { payload.data[key] = JSON.parse(raw); } catch { payload.data[key] = raw; }
+    }
+  }
+  return JSON.stringify(payload, null, 2);
+}
+
+// 从备份 JSON 恢复;返回 { ok, keys, error }
+export function importBackup(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { ok: false, error: '文件不是有效的 JSON' };
+  }
+  if (!parsed || typeof parsed !== 'object' || !parsed.data || typeof parsed.data !== 'object') {
+    return { ok: false, error: '备份文件结构不正确' };
+  }
+  const keys = [];
+  for (const key of BACKUP_KEYS) {
+    if (!(key in parsed.data)) continue;
+    const value = parsed.data[key];
+    // 只接受与原结构一致的顶层类型
+    if (key === 'weightUnit') {
+      if (typeof value !== 'string') continue;
+    } else if (typeof value !== 'object' || value === null || Array.isArray(value) !== (key === 'weightRecords')) {
+      continue;
+    }
+    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    keys.push(key);
+  }
+  if (!keys.length) return { ok: false, error: '备份文件中没有可恢复的数据' };
+  return { ok: true, keys };
 }

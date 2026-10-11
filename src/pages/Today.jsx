@@ -4,6 +4,7 @@ import {
   getCheckinForDate,
   toggleCheckin,
   getProfile,
+  getCurrentStreak,
 } from '../storage/storage';
 import { TASK_ICONS, IconCheck } from '../components/icons';
 
@@ -20,12 +21,14 @@ const TASKS = [
 const Today = ({ showToast }) => {
   const [checkData, setCheckData] = useState([false, false, false, false, false, false, false]);
   const [profile, setProfile] = useState({ nickname: '' });
+  const [streak, setStreak] = useState(0);
   const [justChecked, setJustChecked] = useState(null);
   const today = getTodayString();
 
   useEffect(() => {
     setCheckData(getCheckinForDate(today));
     setProfile(getProfile());
+    setStreak(getCurrentStreak());
   }, [today]);
 
   const completed = checkData.filter(Boolean).length;
@@ -37,6 +40,7 @@ const Today = ({ showToast }) => {
     const nextData = [...checkData];
     nextData[index] = newState;
     setCheckData(nextData);
+    setStreak(getCurrentStreak());
     if (newState) {
       setJustChecked(index);
       setTimeout(() => setJustChecked(null), 500);
@@ -93,6 +97,13 @@ const Today = ({ showToast }) => {
             className="h-full rounded-full originos-blue-bg transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
+        </div>
+        {/* Streak (真实连续打卡天数) */}
+        <div className="flex items-center justify-between mt-3">
+          <span className="text-xs originos-text-light">连续打卡（每天至少 1 项）</span>
+          <span className="text-xs font-medium originos-text">
+            {streak} 天
+          </span>
         </div>
       </section>
 

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { getProfile, saveProfile } from '../storage/storage';
+import React, { useState, useEffect, useRef } from 'react';
+import { getProfile, saveProfile, exportBackup, importBackup } from '../storage/storage';
 import { IconUser, IconInfo, IconBell } from '../components/icons';
 
 const Profile = ({ showToast }) => {
@@ -13,6 +13,7 @@ const Profile = ({ showToast }) => {
   const [editingGoal, setEditingGoal] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
   const [goalInput, setGoalInput] = useState('');
+  const backupFileRef = useRef(null);
 
   useEffect(() => {
     const p = getProfile();
@@ -20,6 +21,39 @@ const Profile = ({ showToast }) => {
     setNicknameInput(p.nickname);
     setGoalInput(p.goal);
   }, []);
+
+  const handleExportBackup = () => {
+    const text = exportBackup();
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `daily-checkin-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('备份已导出');
+  };
+
+  const handleImportBackupFile = (event) => {
+    const file = event.target.files && event.target.files[0];
+    event.target.value = '';
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = importBackup(String(reader.result || ''));
+      if (!result.ok) {
+        showToast('恢复失败：' + result.error);
+        return;
+      }
+      showToast(`已恢复 ${result.keys.length} 项数据，刷新后生效`);
+      const p = getProfile();
+      setProfile(p);
+      setNicknameInput(p.nickname);
+      setGoalInput(p.goal);
+    };
+    reader.onerror = () => showToast('文件读取失败');
+    reader.readAsText(file);
+  };
 
   const updateProfile = (patch) => {
     const next = { ...profile, ...patch };
@@ -225,11 +259,51 @@ const Profile = ({ showToast }) => {
         </div>
       </section>
 
+      {/* Backup & Restore */}
+      <section className="originos-card originos-scale-in p-5 mb-5">
+        <h2 className="text-sm originos-text-light mb-4">数据备份与恢复</h2>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportBackup}
+            className="flex-1 py-3 rounded-xl text-sm originos-text active:scale-[0.97] transition-transform"
+            style={{ background: 'rgba(120, 140, 170, 0.1)' }}
+          >
+            导出备份
+          </button>
+          <button
+            onClick={() => backupFileRef.current && backupFileRef.current.click()}
+            className="flex-1 py-3 rounded-xl text-sm originos-text active:scale-[0.97] transition-transform"
+            style={{ background: 'rgba(120, 140, 170, 0.1)' }}
+          >
+            恢复备份
+          </button>
+          <input
+            ref={backupFileRef}
+            type="file"
+            accept=".json,application/json"
+            onChange={handleImportBackupFile}
+            className="hidden"
+          />
+        </div>
+        <div
+          className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl"
+          style={{ background: 'rgba(120, 140, 170, 0.08)' }}
+        >
+          <span className="originos-text-light flex-shrink-0 mt-0.5">
+            <IconInfo size={14} />
+          </span>
+          <p className="text-xs originos-text-light leading-relaxed">
+            备份包含打卡记录、昵称目标、提醒偏好与体重记录。本地文件、旧网址与 GitHub Pages
+            的浏览器存储互不相通，换网址时请用备份迁移数据。
+          </p>
+        </div>
+      </section>
+
       {/* About */}
       <section className="originos-card originos-scale-in p-5">
         <div className="flex items-center justify-between">
           <span className="text-sm originos-text-light">版本</span>
-          <span className="text-sm originos-text">v1.0.1</span>
+          <span className="text-sm originos-text">v1.0.2</span>
         </div>
         <div className="h-px my-3" style={{ background: 'rgba(120, 140, 170, 0.12)' }} />
         <div className="flex items-center justify-between">

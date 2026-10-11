@@ -29,7 +29,7 @@ function App() {
       case 'today':
         return <Today showToast={showToast} />;
       case 'stats':
-        return <Stats />;
+        return <Stats showToast={showToast} />;
       case 'profile':
         return <Profile showToast={showToast} />;
       default:

@@ -7,6 +7,7 @@ import {
   getMonthSummary,
   TASK_COUNT,
 } from '../storage/storage';
+import WeightCard from '../components/WeightCard';
 
 // 本周柱状图(周一至周日,SVG)
 const WeeklyChart = ({ data }) => {
@@ -124,7 +125,7 @@ const RingChart = ({ percentage }) => {
   );
 };
 
-const Stats = () => {
+const Stats = ({ showToast }) => {
   const [weeklyData, setWeeklyData] = useState([]);
   const [monthlyRate, setMonthlyRate] = useState(0);
   const [recentRecords, setRecentRecords] = useState([]);
@@ -186,7 +187,7 @@ const Stats = () => {
       </section>
 
       {/* Recent 7 Days Records */}
-      <section className="originos-card originos-scale-in p-5">
+      <section className="originos-card originos-scale-in p-5 mb-5">
         <h2 className="text-base font-medium originos-text mb-4">最近 7 天记录</h2>
         <div className="space-y-3">
           {recentRecords.map((record, i) => (
@@ -211,6 +212,9 @@ const Stats = () => {
           ))}
         </div>
       </section>
+
+      {/* Weight Records */}
+      <WeightCard showToast={showToast} />
     </div>
   );
 };
