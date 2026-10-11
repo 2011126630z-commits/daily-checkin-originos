@@ -2,6 +2,9 @@ ext {
     minSdkVersion = 24
     compileSdkVersion = 36
     targetSdkVersion = 36
+    // 显式指定 build-tools 版本：AGP 8.13 默认会去找 35.0.0，而 SDK 里装的是 36.0.0，
+    // 不指定就会触发远程下载（国内网络下会长时间卡住）
+    buildToolsVersion = '36.0.0'
     androidxActivityVersion = '1.11.0'
     androidxAppCompatVersion = '1.7.1'
     androidxCoordinatorLayoutVersion = '1.3.0'

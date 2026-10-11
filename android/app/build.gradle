@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     namespace = "com.dailycheckin.originos"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId "com.dailycheckin.originos"
         minSdkVersion rootProject.ext.minSdkVersion

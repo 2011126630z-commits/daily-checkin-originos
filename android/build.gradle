@@ -17,6 +17,19 @@ buildscript {
 
 apply from: "variables.gradle"
 
+// 统一所有 Android 模块的 build-tools 版本。
+// Capacitor 的 android 库模块（node_modules/@capacitor/android）默认会用 AGP 内置的
+// build-tools 35.0.0，而 SDK 里装的是 36.0.0；不统一就会触发远程下载，
+// 在国内网络下 AGP 会因为拉不到 dl.google.com 而长时间卡住或直接失败。
+subprojects { subproject ->
+    subproject.plugins.withId('com.android.application') {
+        subproject.android.buildToolsVersion = rootProject.ext.buildToolsVersion
+    }
+    subproject.plugins.withId('com.android.library') {
+        subproject.android.buildToolsVersion = rootProject.ext.buildToolsVersion
+    }
+}
+
 allprojects {
     repositories {
         google()
