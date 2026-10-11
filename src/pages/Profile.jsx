@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getProfile, saveProfile, exportBackup, importBackup } from '../storage/storage';
-import { IconUser, IconInfo, IconBell } from '../components/icons';
+import { IconUser, IconInfo, IconBell, IconSun, IconMoon, IconPhone } from '../components/icons';
+import { useTheme } from '../hooks/useTheme';
+import { THEME_OPTIONS } from '../theme';
+
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3';
+
+const THEME_ICONS = { system: IconPhone, light: IconSun, dark: IconMoon };
 
 const Profile = ({ showToast }) => {
   const [profile, setProfile] = useState({
@@ -13,6 +19,7 @@ const Profile = ({ showToast }) => {
   const [editingGoal, setEditingGoal] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
   const [goalInput, setGoalInput] = useState('');
+  const [theme, setTheme] = useTheme();
   const backupFileRef = useRef(null);
 
   useEffect(() => {
@@ -45,7 +52,8 @@ const Profile = ({ showToast }) => {
         showToast('恢复失败：' + result.error);
         return;
       }
-      showToast(`已恢复 ${result.keys.length} 项数据，刷新后生效`);
+      const droppedHint = result.dropped > 0 ? `，已忽略 ${result.dropped} 处无效数据` : '';
+      showToast(`已恢复 ${result.keys.length} 项数据${droppedHint}，刷新后生效`);
       const p = getProfile();
       setProfile(p);
       setNicknameInput(p.nickname);
@@ -84,7 +92,7 @@ const Profile = ({ showToast }) => {
       onClick={onToggle}
       className="relative w-[52px] h-[32px] rounded-full transition-colors duration-300 flex-shrink-0 active:scale-[0.97]"
       style={{
-        background: on ? '#315EFB' : 'rgba(120, 140, 170, 0.25)',
+        background: on ? 'var(--origin-blue)' : 'var(--origin-fill-strong)',
       }}
       role="switch"
       aria-checked={on}
@@ -94,7 +102,7 @@ const Profile = ({ showToast }) => {
         className="absolute top-[3px] w-[26px] h-[26px] rounded-full bg-white transition-all duration-300"
         style={{
           left: on ? '23px' : '3px',
-          boxShadow: '0 2px 6px rgba(120, 140, 170, 0.3)',
+          boxShadow: '0 2px 6px var(--origin-shadow-strong)',
         }}
       />
     </button>
@@ -111,11 +119,8 @@ const Profile = ({ showToast }) => {
       <section className="originos-card originos-scale-in p-5 mb-5">
         <div className="flex items-center gap-4">
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl flex-shrink-0 originos-text-light"
-            style={{
-              background: 'rgba(49, 94, 251, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.6)',
-            }}
+            className="w-16 h-16 rounded-full flex items-center justify-center text-2xl flex-shrink-0 originos-text-light originos-blue-soft"
+            style={{ border: '1px solid var(--origin-border)' }}
           >
             {profile.nickname ? profile.nickname[0] : <IconUser size={26} />}
           </div>
@@ -128,17 +133,13 @@ const Profile = ({ showToast }) => {
                   onChange={(e) => setNicknameInput(e.target.value)}
                   maxLength={12}
                   autoFocus
-                  className="flex-1 min-w-0 px-3 py-2 rounded-xl text-[15px] originos-text outline-none"
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.6)',
-                    border: '1px solid rgba(49, 94, 251, 0.3)',
-                  }}
+                  aria-label="昵称"
+                  className="originos-input originos-input-strong flex-1 min-w-0 px-3 py-2 rounded-xl text-[15px] outline-none"
                   placeholder="输入昵称"
                 />
                 <button
                   onClick={saveNickname}
-                  className="px-3 py-2 rounded-xl text-sm font-medium originos-blue active:scale-[0.97] transition-transform"
-                  style={{ background: 'rgba(49, 94, 251, 0.1)' }}
+                  className="originos-blue originos-blue-soft px-3 py-2 rounded-xl text-sm font-medium active:scale-[0.97] transition-transform"
                 >
                   保存
                 </button>
@@ -169,25 +170,20 @@ const Profile = ({ showToast }) => {
               maxLength={60}
               rows={2}
               autoFocus
-              className="w-full px-3 py-2 rounded-xl text-[15px] originos-text outline-none resize-none"
-              style={{
-                background: 'rgba(255, 255, 255, 0.6)',
-                border: '1px solid rgba(49, 94, 251, 0.3)',
-              }}
+              aria-label="我的目标"
+              className="originos-input originos-input-strong w-full px-3 py-2 rounded-xl text-[15px] outline-none resize-none"
               placeholder="例如：坚持打卡 100 天，养成早起习惯"
             />
             <div className="flex justify-end gap-2 mt-2">
               <button
                 onClick={() => { setEditingGoal(false); setGoalInput(profile.goal); }}
-                className="px-4 py-2 rounded-xl text-sm originos-text-light active:scale-[0.97] transition-transform"
-                style={{ background: 'rgba(120, 140, 170, 0.1)' }}
+                className="originos-fill originos-text-light px-4 py-2 rounded-xl text-sm active:scale-[0.97] transition-transform"
               >
                 取消
               </button>
               <button
                 onClick={saveGoal}
-                className="px-4 py-2 rounded-xl text-sm font-medium originos-blue active:scale-[0.97] transition-transform"
-                style={{ background: 'rgba(49, 94, 251, 0.1)' }}
+                className="originos-blue originos-blue-soft px-4 py-2 rounded-xl text-sm font-medium active:scale-[0.97] transition-transform"
               >
                 保存
               </button>
@@ -203,6 +199,44 @@ const Profile = ({ showToast }) => {
             </p>
           </button>
         )}
+      </section>
+
+      {/* Appearance / Theme */}
+      <section className="originos-card originos-scale-in p-5 mb-5">
+        <h2 className="text-sm originos-text-light mb-4">外观</h2>
+        <div className="flex gap-2" role="radiogroup" aria-label="主题外观">
+          {THEME_OPTIONS.map((opt) => {
+            const Icon = THEME_ICONS[opt.value];
+            const active = theme === opt.value;
+            return (
+              <button
+                key={opt.value}
+                role="radio"
+                aria-checked={active}
+                onClick={() => {
+                  setTheme(opt.value);
+                  showToast(`外观已切换为「${opt.label}」`);
+                }}
+                className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all duration-300 active:scale-[0.97] ${
+                  active ? 'originos-blue' : 'originos-text-light'
+                } ${active ? 'originos-blue-soft' : 'originos-fill'}`}
+              >
+                <Icon size={18} />
+                <span className="text-xs">{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        <div
+          className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl originos-note"
+        >
+          <span className="originos-text-light flex-shrink-0 mt-0.5">
+            <IconInfo size={14} />
+          </span>
+          <p className="text-xs originos-text-light leading-relaxed">
+            深色模式使用石墨蓝黑玻璃，与浅色模式共用同一套数据；「跟随系统」会随手机深浅色自动切换。
+          </p>
+        </div>
       </section>
 
       {/* Reminder Card */}
@@ -226,7 +260,7 @@ const Profile = ({ showToast }) => {
           />
         </div>
 
-        <div className="h-px my-1" style={{ background: 'rgba(120, 140, 170, 0.12)' }} />
+        <div className="originos-divider my-1" />
 
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-3">
@@ -246,10 +280,7 @@ const Profile = ({ showToast }) => {
         </div>
 
         {/* 明确声明:通知功能尚未实现,开关仅保存偏好 */}
-        <div
-          className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl"
-          style={{ background: 'rgba(120, 140, 170, 0.08)' }}
-        >
+        <div className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl originos-note">
           <span className="originos-text-light flex-shrink-0 mt-0.5">
             <IconInfo size={14} />
           </span>
@@ -265,15 +296,13 @@ const Profile = ({ showToast }) => {
         <div className="flex gap-2">
           <button
             onClick={handleExportBackup}
-            className="flex-1 py-3 rounded-xl text-sm originos-text active:scale-[0.97] transition-transform"
-            style={{ background: 'rgba(120, 140, 170, 0.1)' }}
+            className="originos-fill originos-text flex-1 py-3 rounded-xl text-sm active:scale-[0.97] transition-transform"
           >
             导出备份
           </button>
           <button
             onClick={() => backupFileRef.current && backupFileRef.current.click()}
-            className="flex-1 py-3 rounded-xl text-sm originos-text active:scale-[0.97] transition-transform"
-            style={{ background: 'rgba(120, 140, 170, 0.1)' }}
+            className="originos-fill originos-text flex-1 py-3 rounded-xl text-sm active:scale-[0.97] transition-transform"
           >
             恢复备份
           </button>
@@ -285,10 +314,7 @@ const Profile = ({ showToast }) => {
             className="hidden"
           />
         </div>
-        <div
-          className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl"
-          style={{ background: 'rgba(120, 140, 170, 0.08)' }}
-        >
+        <div className="flex items-start gap-2 mt-3 px-3 py-2.5 rounded-xl originos-note">
           <span className="originos-text-light flex-shrink-0 mt-0.5">
             <IconInfo size={14} />
           </span>
@@ -303,9 +329,9 @@ const Profile = ({ showToast }) => {
       <section className="originos-card originos-scale-in p-5">
         <div className="flex items-center justify-between">
           <span className="text-sm originos-text-light">版本</span>
-          <span className="text-sm originos-text">v1.0.2</span>
+          <span className="text-sm originos-text">v{APP_VERSION}</span>
         </div>
-        <div className="h-px my-3" style={{ background: 'rgba(120, 140, 170, 0.12)' }} />
+        <div className="originos-divider my-3" />
         <div className="flex items-center justify-between">
           <span className="text-sm originos-text-light">设计</span>
           <span className="text-sm originos-text">OriginOS 7 液态玻璃</span>

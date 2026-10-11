@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
-  getTodayString,
   getCheckinForDate,
+  getTodayString,
   toggleCheckin,
   getProfile,
   getCurrentStreak,
+  getLongestStreak,
 } from '../storage/storage';
+import { useToday } from '../hooks/useToday';
 import { TASK_ICONS, IconCheck } from '../components/icons';
 
 const TASKS = [
@@ -19,16 +21,20 @@ const TASKS = [
 ];
 
 const Today = ({ showToast }) => {
-  const [checkData, setCheckData] = useState([false, false, false, false, false, false, false]);
-  const [profile, setProfile] = useState({ nickname: '' });
-  const [streak, setStreak] = useState(0);
+  // 跨零点自动更新日期（修复长时间挂机后仍显示昨天的数据）
+  const today = useToday();
+  // 首次渲染直接读取，避免进入页面时闪一帧空状态
+  const [checkData, setCheckData] = useState(() => getCheckinForDate(getTodayString()));
+  const [profile, setProfile] = useState(() => getProfile());
+  const [streak, setStreak] = useState(() => getCurrentStreak());
+  const [longest, setLongest] = useState(() => getLongestStreak());
   const [justChecked, setJustChecked] = useState(null);
-  const today = getTodayString();
 
   useEffect(() => {
     setCheckData(getCheckinForDate(today));
     setProfile(getProfile());
     setStreak(getCurrentStreak());
+    setLongest(getLongestStreak());
   }, [today]);
 
   const completed = checkData.filter(Boolean).length;
@@ -41,6 +47,7 @@ const Today = ({ showToast }) => {
     nextData[index] = newState;
     setCheckData(nextData);
     setStreak(getCurrentStreak());
+    setLongest(getLongestStreak());
     if (newState) {
       setJustChecked(index);
       setTimeout(() => setJustChecked(null), 500);
@@ -51,9 +58,9 @@ const Today = ({ showToast }) => {
   };
 
   const dateDisplay = () => {
-    const now = new Date();
-    const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
-    return `${now.getMonth() + 1}月${now.getDate()}日 ${weekday}`;
+    const [y, m, d] = today.split('-').map(Number);
+    const weekday = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date(y, m - 1, d).getDay()];
+    return `${m}月${d}日 ${weekday}`;
   };
 
   const greeting = () => {
@@ -92,17 +99,24 @@ const Today = ({ showToast }) => {
           </div>
         </div>
         {/* Progress Bar */}
-        <div className="w-full h-2 rounded-full bg-[rgba(120,140,170,0.15)] overflow-hidden">
+        <div
+          className="w-full h-2 rounded-full originos-track overflow-hidden"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="今日完成进度"
+        >
           <div
             className="h-full rounded-full originos-blue-bg transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
-        {/* Streak (真实连续打卡天数) */}
+        {/* Streak (真实连续打卡天数 + 历史最佳) */}
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs originos-text-light">连续打卡（每天至少 1 项）</span>
           <span className="text-xs font-medium originos-text">
-            {streak} 天
+            {streak} 天<span className="originos-text-light font-normal"> · 最长 {longest} 天</span>
           </span>
         </div>
       </section>
@@ -116,14 +130,14 @@ const Today = ({ showToast }) => {
             <button
               key={task.id}
               onClick={() => handleToggle(index)}
+              aria-pressed={isDone}
+              aria-label={`${task.title}，${isDone ? '已完成' : '未完成'}`}
               className="originos-card w-full p-4 flex items-center gap-4 text-left active:scale-[0.97] transition-transform duration-200"
             >
               {/* Task Icon (inline SVG) */}
               <span
-                className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${
-                  isDone
-                    ? 'text-[#8B919A] bg-[rgba(120,140,170,0.08)]'
-                    : 'originos-text-light bg-[rgba(120,140,170,0.1)]'
+                className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center originos-text-light originos-icon-chip transition-opacity duration-300 ${
+                  isDone ? 'opacity-60' : 'opacity-100'
                 }`}
               >
                 <TaskIcon size={18} />
@@ -147,9 +161,9 @@ const Today = ({ showToast }) => {
               <span
                 className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                   isDone
-                    ? 'originos-blue-bg text-white originos-checkmark'
-                    : 'border-2 border-[rgba(120,140,170,0.35)]'
-                } ${justChecked === index ? 'originos-checkmark' : ''}`}
+                    ? 'originos-blue-bg text-white'
+                    : 'originos-check-circle'
+                } ${isDone || justChecked === index ? 'originos-checkmark' : ''}`}
               >
                 {isDone && <IconCheck size={16} />}
               </span>

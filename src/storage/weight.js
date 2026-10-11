@@ -227,6 +227,40 @@ export function parseWeightFile(text) {
   return { records };
 }
 
+// ---- 备份恢复用的清洗函数（供 storage.importBackup 调用） ----
+// 单位：只接受 kg / jin，其它返回 null 表示丢弃
+export function sanitizeWeightUnit(value) {
+  return value === 'jin' || value === 'kg' ? value : null;
+}
+
+// 体重记录数组：逐条校验时间与数值范围，非法条目丢弃
+// 返回 { records: [] | null, dropped: number }；null 表示整体结构不合法
+export function sanitizeWeightRecords(value) {
+  if (!Array.isArray(value)) return { records: null, dropped: 0 };
+
+  const records = [];
+  let dropped = 0;
+
+  value.forEach((r, index) => {
+    if (!r || typeof r !== 'object') { dropped += 1; return; }
+    const weightKg = Number(r.weightKg);
+    const t = new Date(r.timestamp);
+    if (!Number.isFinite(weightKg) || weightKg < KG_MIN || weightKg > KG_MAX || Number.isNaN(t.getTime())) {
+      dropped += 1;
+      return;
+    }
+    records.push({
+      id: typeof r.id === 'string' && r.id ? r.id : `w_restore_${t.getTime()}_${index}`,
+      timestamp: t.toISOString(),
+      weightKg: Math.round(weightKg * 100) / 100,
+      source: typeof r.source === 'string' && r.source ? r.source : 'import',
+      ...(r.sourceId ? { sourceId: String(r.sourceId) } : {})
+    });
+  });
+
+  return { records, dropped };
+}
+
 export function exportWeightJSON() {
   const records = getWeightRecords();
   return JSON.stringify({ app: 'daily-checkin-originos', exportedAt: new Date().toISOString(), records }, null, 2);

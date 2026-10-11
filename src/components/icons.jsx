@@ -120,6 +120,28 @@ export const IconBell = make(
   </>
 );
 
+// ---- 外观/主题图标 ----
+export const IconSun = make(
+  <>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2" />
+    <path d="M12 20v2" />
+    <path d="M4.9 4.9l1.4 1.4" />
+    <path d="M17.7 17.7l1.4 1.4" />
+    <path d="M2 12h2" />
+    <path d="M20 12h2" />
+    <path d="M4.9 19.1l1.4-1.4" />
+    <path d="M17.7 6.3l1.4-1.4" />
+  </>
+);
+
+export const IconPhone = make(
+  <>
+    <rect x="6" y="2.5" width="12" height="19" rx="3" />
+    <path d="M10.5 5.5h3" />
+  </>
+);
+
 // 任务 id -> 图标 映射(顺序与 Today.jsx 的 TASKS 一致)
 export const TASK_ICONS = [
   IconDroplet,

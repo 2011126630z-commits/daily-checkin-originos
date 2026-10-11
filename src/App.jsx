@@ -39,33 +39,28 @@ function App() {
 
   return (
     <div className="originos-app min-h-screen relative" style={{ zIndex: 1 }}>
-      {/* Ambient Soft Light Layers - extremely subtle */}
+      {/* Ambient Soft Light Layers - extremely subtle, 颜色随主题令牌切换 */}
       <div
-        className="fixed pointer-events-none"
+        className="originos-ambient"
         style={{
           top: '-10%',
           right: '-15%',
           width: '60%',
           height: '40%',
-          background: 'rgba(255, 255, 255, 0.5)',
-          borderRadius: '50%',
+          background: 'var(--origin-glow)',
           filter: 'blur(80px)',
-          opacity: 0.05,
-          zIndex: 0,
         }}
       />
       <div
-        className="fixed pointer-events-none"
+        className="originos-ambient"
         style={{
           bottom: '10%',
           left: '-20%',
           width: '55%',
           height: '35%',
-          background: 'rgba(230, 235, 245, 0.6)',
-          borderRadius: '50%',
+          background: 'var(--origin-surface)',
           filter: 'blur(90px)',
-          opacity: 0.04,
-          zIndex: 0,
+          opacity: 0.6,
         }}
       />
 

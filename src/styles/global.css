@@ -2,26 +2,173 @@
 @tailwind components;
 @tailwind utilities;
 
-/* OriginOS 7 Matte Grey-Blue Background */
+/* ============================================================
+   OriginOS 7 Design Tokens
+   - 浅色：雾面灰蓝液态玻璃
+   - 深色：石墨蓝黑玻璃（OriginOS 7 深色模式）
+   主题由 <html data-theme="system|light|dark"> 控制：
+   system 跟随系统 (prefers-color-scheme)
+   ============================================================ */
 :root {
+  /* 背景 */
   --origin-bg: #E9EDF4;
   --origin-bg-dark: #DDE3EE;
   --origin-bg-light: #E7EBF3;
+
+  /* 品牌蓝（严格限制：勾选、进度、图表高亮、激活态、开关） */
   --origin-blue: #315EFB;
-  --origin-gray: #8B919A;
+  --origin-blue-soft: rgba(49, 94, 251, 0.1);
+  --origin-blue-border: rgba(49, 94, 251, 0.3);
+
+  /* 文本 */
   --origin-text: #2D3748;
   --origin-text-light: #718096;
+  --origin-gray: #8B919A;
+
+  /* 玻璃表面 */
+  --origin-surface: rgba(255, 255, 255, 0.35);
+  --origin-surface-strong: rgba(255, 255, 255, 0.6);
+  --origin-border: rgba(255, 255, 255, 0.6);
+  --origin-border-strong: rgba(255, 255, 255, 0.7);
+  --origin-highlight: rgba(255, 255, 255, 0.8);
+  --origin-shadow: rgba(120, 140, 170, 0.15);
+  --origin-shadow-strong: rgba(120, 140, 170, 0.2);
+
+  /* 中性填充 / 轨道 / 分隔 */
+  --origin-track: rgba(120, 140, 170, 0.15);
+  --origin-fill: rgba(120, 140, 170, 0.1);
+  --origin-fill-strong: rgba(120, 140, 170, 0.25);
+  --origin-divider: rgba(120, 140, 170, 0.12);
+  --origin-note: rgba(120, 140, 170, 0.08);
+  --origin-check-border: rgba(120, 140, 170, 0.35);
+
+  /* 组件专用 */
+  --origin-nav-bg: rgba(255, 255, 255, 0.45);
+  --origin-nav-active: rgba(49, 94, 251, 0.06);
+  --origin-toast-bg: rgba(255, 255, 255, 0.9);
+  --origin-input-bg: rgba(255, 255, 255, 0.6);
+  --origin-input-bg-strong: rgba(255, 255, 255, 0.7);
+  --origin-glow: rgba(255, 255, 255, 0.5);
+  --origin-sheen: rgba(255, 255, 255, 0.5);
+  --origin-grid: rgba(120, 140, 170, 0.03);
+  --origin-noise-opacity: 0.03;
+  /* 图表圆点等需要不透明底色的元素 */
+  --origin-surface-solid: #FFFFFF;
+
+  /* 阴影强度（深色下必须换成黑色，否则玻璃会「发灰」） */
+  --origin-scheme: light;
+  --origin-shadow-color: 120, 140, 170;
+  --origin-shadow-alpha: 0.15;
+}
+
+/* ---- 深色令牌（显式 dark 与 system 跟随共用同一套值） ---- */
+:root[data-theme="dark"] {
+  --origin-bg: #12151C;
+  --origin-bg-dark: #0D1015;
+  --origin-bg-light: #171C26;
+
+  --origin-blue: #5B83FF;
+  --origin-blue-soft: rgba(91, 131, 255, 0.16);
+  --origin-blue-border: rgba(91, 131, 255, 0.45);
+
+  --origin-text: #E8ECF4;
+  --origin-text-light: #98A2B3;
+  --origin-gray: #7C8798;
+
+  --origin-surface: rgba(255, 255, 255, 0.06);
+  --origin-surface-strong: rgba(255, 255, 255, 0.09);
+  --origin-border: rgba(255, 255, 255, 0.1);
+  --origin-border-strong: rgba(255, 255, 255, 0.14);
+  --origin-highlight: rgba(255, 255, 255, 0.16);
+  --origin-shadow: rgba(0, 0, 0, 0.45);
+  --origin-shadow-strong: rgba(0, 0, 0, 0.55);
+
+  --origin-track: rgba(255, 255, 255, 0.1);
+  --origin-fill: rgba(255, 255, 255, 0.06);
+  --origin-fill-strong: rgba(255, 255, 255, 0.14);
+  --origin-divider: rgba(255, 255, 255, 0.08);
+  --origin-note: rgba(255, 255, 255, 0.05);
+  --origin-check-border: rgba(255, 255, 255, 0.22);
+
+  --origin-nav-bg: rgba(24, 28, 37, 0.72);
+  --origin-nav-active: rgba(91, 131, 255, 0.18);
+  --origin-toast-bg: rgba(30, 35, 46, 0.92);
+  --origin-input-bg: rgba(255, 255, 255, 0.06);
+  --origin-input-bg-strong: rgba(255, 255, 255, 0.08);
+  --origin-glow: rgba(120, 150, 255, 0.12);
+  --origin-sheen: rgba(255, 255, 255, 0.14);
+  --origin-grid: rgba(255, 255, 255, 0.02);
+  --origin-noise-opacity: 0.02;
+  --origin-surface-solid: #161B24;
+
+  --origin-scheme: dark;
+  --origin-shadow-color: 0, 0, 0;
+  --origin-shadow-alpha: 0.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="system"] {
+    --origin-bg: #12151C;
+    --origin-bg-dark: #0D1015;
+    --origin-bg-light: #171C26;
+
+    --origin-blue: #5B83FF;
+    --origin-blue-soft: rgba(91, 131, 255, 0.16);
+    --origin-blue-border: rgba(91, 131, 255, 0.45);
+
+    --origin-text: #E8ECF4;
+    --origin-text-light: #98A2B3;
+    --origin-gray: #7C8798;
+
+    --origin-surface: rgba(255, 255, 255, 0.06);
+    --origin-surface-strong: rgba(255, 255, 255, 0.09);
+    --origin-border: rgba(255, 255, 255, 0.1);
+    --origin-border-strong: rgba(255, 255, 255, 0.14);
+    --origin-highlight: rgba(255, 255, 255, 0.16);
+    --origin-shadow: rgba(0, 0, 0, 0.45);
+    --origin-shadow-strong: rgba(0, 0, 0, 0.55);
+
+    --origin-track: rgba(255, 255, 255, 0.1);
+    --origin-fill: rgba(255, 255, 255, 0.06);
+    --origin-fill-strong: rgba(255, 255, 255, 0.14);
+    --origin-divider: rgba(255, 255, 255, 0.08);
+    --origin-note: rgba(255, 255, 255, 0.05);
+    --origin-check-border: rgba(255, 255, 255, 0.22);
+
+    --origin-nav-bg: rgba(24, 28, 37, 0.72);
+    --origin-nav-active: rgba(91, 131, 255, 0.18);
+    --origin-toast-bg: rgba(30, 35, 46, 0.92);
+    --origin-input-bg: rgba(255, 255, 255, 0.06);
+    --origin-input-bg-strong: rgba(255, 255, 255, 0.08);
+    --origin-glow: rgba(120, 150, 255, 0.12);
+    --origin-sheen: rgba(255, 255, 255, 0.14);
+    --origin-grid: rgba(255, 255, 255, 0.02);
+    --origin-noise-opacity: 0.02;
+
+    --origin-scheme: dark;
+    --origin-shadow-color: 0, 0, 0;
+    --origin-shadow-alpha: 0.45;
+  }
+}
+
+html {
+  color-scheme: var(--origin-scheme);
+  background: var(--origin-bg-dark);
 }
 
 body {
   background: linear-gradient(180deg, var(--origin-bg) 0%, var(--origin-bg-dark) 50%, var(--origin-bg-light) 100%);
+  background-attachment: fixed;
   margin: 0;
   padding: 0;
+  color: var(--origin-text);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  /* 主题切换时平滑过渡 */
+  transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 /* Subtle Noise Texture */
@@ -32,10 +179,10 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 0;
-  opacity: 0.03;
+  opacity: var(--origin-noise-opacity);
 }
 
 /* Low-opacity Grid Layer */
@@ -47,27 +194,36 @@ body::after {
   width: 100%;
   height: 100%;
   background-image:
-    linear-gradient(rgba(120, 140, 170, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 140, 170, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--origin-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--origin-grid) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.03;
+}
+
+/* 环境光斑（App.jsx 中的 fixed 光晕层） */
+.originos-ambient {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  transition: background 0.35s ease;
 }
 
 /* OriginOS Liquid Glass Card Style */
 .originos-card {
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--origin-surface);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--origin-border);
   border-radius: 20px;
-  /* 柔和灰蓝外阴影 + 真实生效的顶部内高光 */
+  /* 柔和外阴影 + 真实生效的顶部内高光 */
   box-shadow:
-    0 10px 30px rgba(120, 140, 170, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 10px 30px var(--origin-shadow),
+    inset 0 1px 0 var(--origin-highlight);
   position: relative;
   overflow: hidden;
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .originos-card::before {
@@ -77,17 +233,75 @@ body::after {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, var(--origin-highlight), transparent);
+  pointer-events: none;
 }
 
-/* 内高光:inset box-shadow 才是有效写法(background: inset ... 是无效 CSS) */
+/* 顶部内高光已由 box-shadow inset 实现，::after 保留为可选的玻璃反光层 */
 .originos-card::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 var(--origin-highlight);
   pointer-events: none;
+}
+
+/* ---- 通用令牌化工具类（替代组件里的 rgba 硬编码） ---- */
+.originos-fill {
+  background: var(--origin-fill);
+}
+
+.originos-fill-strong {
+  background: var(--origin-fill-strong);
+}
+
+.originos-blue-soft {
+  background: var(--origin-blue-soft);
+}
+
+.originos-track {
+  background: var(--origin-track);
+}
+
+.originos-divider {
+  background: var(--origin-divider);
+  height: 1px;
+}
+
+.originos-note {
+  background: var(--origin-note);
+}
+
+/* 半透明内嵌面板（表单容器等） */
+.originos-panel {
+  background: var(--origin-surface-strong);
+  border: 1px solid var(--origin-border);
+}
+
+/* 输入框：统一背景/边框 + 深色下可读的占位符 */
+.originos-input {
+  background: var(--origin-input-bg);
+  border: 1px solid var(--origin-blue-border);
+  color: var(--origin-text);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.originos-input::placeholder {
+  color: var(--origin-text-light);
+}
+
+.originos-input-strong {
+  background: var(--origin-input-bg-strong);
+}
+
+/* 圆形/图标底板 */
+.originos-icon-chip {
+  background: var(--origin-fill);
+}
+
+.originos-check-circle {
+  border: 2px solid var(--origin-check-border);
 }
 
 /* Floating Capsule Navigation */
@@ -97,12 +311,12 @@ body::after {
   left: 24px;
   right: 24px;
   height: 52px;
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: var(--origin-nav-bg);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--origin-border-strong);
   border-radius: 30px;
-  box-shadow: 0 10px 30px rgba(120, 140, 170, 0.18);
+  box-shadow: 0 10px 30px var(--origin-shadow);
   display: flex;
   align-items: center;
   justify-content: space-around;
@@ -110,6 +324,7 @@ body::after {
   z-index: 100;
   max-width: 432px;
   margin: 0 auto;
+  transition: background-color 0.35s ease, border-color 0.35s ease;
 }
 
 .originos-nav::before {
@@ -119,8 +334,9 @@ body::after {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+  background: linear-gradient(90deg, transparent, var(--origin-highlight), transparent);
   border-radius: 30px 30px 0 0;
+  pointer-events: none;
 }
 
 /* Nav Item */
@@ -143,7 +359,7 @@ body::after {
 }
 
 .originos-nav-item.active::after {
-  background: rgba(49, 94, 251, 0.06);
+  background: var(--origin-nav-active);
 }
 
 /* Subtle flowing sheen on active item */
@@ -152,7 +368,7 @@ body::after {
   position: absolute;
   inset: 4px 6px;
   border-radius: 22px;
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, var(--origin-sheen) 50%, transparent 70%);
   background-size: 250% 100%;
   animation: navSheen 3.2s ease-in-out infinite;
   z-index: -1;
@@ -189,7 +405,7 @@ body::after {
 }
 
 .originos-blue-light-bg {
-  background: rgba(49, 94, 251, 0.1);
+  background: var(--origin-blue-soft);
 }
 
 /* Text Colors */
@@ -199,6 +415,13 @@ body::after {
 
 .originos-text-light {
   color: var(--origin-text-light);
+}
+
+/* 键盘可访问性：仅在键盘聚焦时显示焦点环 */
+:where(button, a, input, textarea, [role="switch"]):focus-visible {
+  outline: 2px solid var(--origin-blue);
+  outline-offset: 2px;
+  border-radius: 12px;
 }
 
 /* Animations */
@@ -268,13 +491,14 @@ body::after {
   top: 20px;
   left: 50%;
   transform: translateX(-50%) translateY(-100px);
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--origin-toast-bg);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  border: 1px solid var(--origin-border);
   border-radius: 12px;
   padding: 12px 20px;
-  box-shadow: 0 10px 30px rgba(120, 140, 170, 0.2);
+  color: var(--origin-text);
+  box-shadow: 0 10px 30px var(--origin-shadow-strong);
   z-index: 1000;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
@@ -286,6 +510,54 @@ body::after {
 
 .originos-toast.show {
   transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================================
+   月度热力图（统计页）
+   ============================================================ */
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.heat-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  line-height: 1;
+  color: var(--origin-text-light);
+  background: var(--origin-fill);
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.heat-cell:active {
+  transform: scale(0.94);
+}
+
+/* 完成度分级：以 vivo 蓝透明度表达，不使用大块蓝色填充
+   浅层用主题文本色（浅色=深灰 / 深色=浅白），深层固定白字 */
+.heat-cell[data-level="1"] { background: rgba(49, 94, 251, 0.18); color: var(--origin-text); }
+.heat-cell[data-level="2"] { background: rgba(49, 94, 251, 0.34); color: var(--origin-text); }
+.heat-cell[data-level="3"] { background: rgba(49, 94, 251, 0.54); color: #ffffff; }
+.heat-cell[data-level="4"] { background: rgba(49, 94, 251, 0.82); color: #ffffff; }
+
+.heat-cell.is-today {
+  border-color: var(--origin-blue);
+}
+
+.heat-cell.is-future {
+  opacity: 0.35;
+}
+
+.heat-cell.is-empty {
+  background: transparent;
+  border: none;
 }
 
 /* Mobile Optimization */
@@ -300,5 +572,9 @@ body::after {
 
   .originos-nav {
     border-radius: 30px;
+  }
+
+  .heat-grid {
+    gap: 5px;
   }
 }

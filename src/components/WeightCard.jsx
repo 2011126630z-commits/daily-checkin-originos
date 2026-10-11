@@ -57,11 +57,11 @@ const TrendChart = ({ records, unit }) => {
   const coords = values.map((v, i) => [padX + step * i, y(v)]);
 
   return (
-    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+    <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label="体重趋势图">
       <polyline
         points={coords.map(([x, yy]) => `${x},${yy}`).join(' ')}
         fill="none"
-        stroke="#315EFB"
+        style={{ stroke: 'var(--origin-blue)' }}
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -72,8 +72,10 @@ const TrendChart = ({ records, unit }) => {
           cx={x}
           cy={yy}
           r={i === coords.length - 1 ? 4 : 2.5}
-          fill={i === coords.length - 1 ? '#315EFB' : '#ffffff'}
-          stroke="#315EFB"
+          style={{
+            fill: i === coords.length - 1 ? 'var(--origin-blue)' : 'var(--origin-surface-solid)',
+            stroke: 'var(--origin-blue)',
+          }}
           strokeWidth="1.5"
         />
       ))}
@@ -200,15 +202,14 @@ const WeightCard = ({ showToast }) => {
       {/* 标题 + 单位切换 */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-medium originos-text">体重记录</h2>
-        <div className="flex rounded-full overflow-hidden" style={{ background: 'rgba(120,140,170,0.1)' }}>
+        <div className="flex rounded-full overflow-hidden originos-fill">
           {['kg', 'jin'].map((u) => (
             <button
               key={u}
               onClick={() => switchUnit(u)}
               className={`px-3 py-1 text-xs transition-colors duration-200 ${
                 unit === u ? 'originos-blue font-medium' : 'originos-text-light'
-              }`}
-              style={unit === u ? { background: 'rgba(49,94,251,0.08)' } : undefined}
+              } ${unit === u ? 'originos-blue-soft' : ''}`}
             >
               {unitLabel(u)}
             </button>
@@ -231,8 +232,7 @@ const WeightCard = ({ showToast }) => {
             </div>
             <button
               onClick={openAdd}
-              className="px-3 py-2 rounded-xl text-sm font-medium originos-blue active:scale-[0.97] transition-transform"
-              style={{ background: 'rgba(49,94,251,0.1)' }}
+              className="originos-blue originos-blue-soft px-3 py-2 rounded-xl text-sm font-medium active:scale-[0.97] transition-transform"
             >
               新增
             </button>
@@ -254,8 +254,7 @@ const WeightCard = ({ showToast }) => {
           <p className="text-sm originos-text-light mb-3">暂无体重记录</p>
           <button
             onClick={openAdd}
-            className="px-4 py-2 rounded-xl text-sm font-medium originos-blue active:scale-[0.97] transition-transform"
-            style={{ background: 'rgba(49,94,251,0.1)' }}
+            className="originos-blue originos-blue-soft px-4 py-2 rounded-xl text-sm font-medium active:scale-[0.97] transition-transform"
           >
             记录第一条体重
           </button>
@@ -264,7 +263,7 @@ const WeightCard = ({ showToast }) => {
 
       {/* 新增/编辑表单 */}
       {formOpen && (
-        <div className="rounded-2xl p-3 mt-3" style={{ background: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.6)' }}>
+        <div className="originos-panel rounded-2xl p-3 mt-3">
           <div className="flex items-center gap-2 mb-2">
             <input
               type="number"
@@ -273,8 +272,8 @@ const WeightCard = ({ showToast }) => {
               value={weightInput}
               onChange={(e) => setWeightInput(e.target.value)}
               placeholder={`体重（${unitLabel(unit)}）`}
-              className="flex-1 min-w-0 px-3 py-2 rounded-xl text-[15px] originos-text outline-none"
-              style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(49,94,251,0.25)' }}
+              aria-label="体重数值"
+              className="originos-input originos-input-strong flex-1 min-w-0 px-3 py-2 rounded-xl text-[15px] outline-none"
             />
             <span className="text-sm originos-text-light flex-shrink-0">{unitLabel(unit)}</span>
           </div>
@@ -282,21 +281,19 @@ const WeightCard = ({ showToast }) => {
             type="datetime-local"
             value={timeInput}
             onChange={(e) => setTimeInput(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl text-sm originos-text outline-none mb-3"
-            style={{ background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(49,94,251,0.25)' }}
+            aria-label="测量时间"
+            className="originos-input originos-input-strong w-full px-3 py-2 rounded-xl text-sm outline-none mb-3"
           />
           <div className="flex justify-end gap-2">
             <button
               onClick={() => setFormOpen(false)}
-              className="px-4 py-2 rounded-xl text-sm originos-text-light active:scale-[0.97] transition-transform"
-              style={{ background: 'rgba(120,140,170,0.1)' }}
+              className="originos-fill originos-text-light px-4 py-2 rounded-xl text-sm active:scale-[0.97] transition-transform"
             >
               取消
             </button>
             <button
               onClick={submitForm}
-              className="px-4 py-2 rounded-xl text-sm font-medium originos-blue active:scale-[0.97] transition-transform"
-              style={{ background: 'rgba(49,94,251,0.1)' }}
+              className="originos-blue originos-blue-soft px-4 py-2 rounded-xl text-sm font-medium active:scale-[0.97] transition-transform"
             >
               {editId ? '保存修改' : '保存'}
             </button>
@@ -343,22 +340,19 @@ const WeightCard = ({ showToast }) => {
       <div className="flex gap-2 mt-4">
         <button
           onClick={() => fileRef.current && fileRef.current.click()}
-          className="flex-1 py-2 rounded-xl text-xs originos-text active:scale-[0.97] transition-transform"
-          style={{ background: 'rgba(120,140,170,0.1)' }}
+          className="originos-fill originos-text flex-1 py-2 rounded-xl text-xs active:scale-[0.97] transition-transform"
         >
           导入 JSON/CSV
         </button>
         <button
           onClick={() => doExport('json')}
-          className="flex-1 py-2 rounded-xl text-xs originos-text active:scale-[0.97] transition-transform"
-          style={{ background: 'rgba(120,140,170,0.1)' }}
+          className="originos-fill originos-text flex-1 py-2 rounded-xl text-xs active:scale-[0.97] transition-transform"
         >
           导出 JSON
         </button>
         <button
           onClick={() => doExport('csv')}
-          className="flex-1 py-2 rounded-xl text-xs originos-text active:scale-[0.97] transition-transform"
-          style={{ background: 'rgba(120,140,170,0.1)' }}
+          className="originos-fill originos-text flex-1 py-2 rounded-xl text-xs active:scale-[0.97] transition-transform"
         >
           导出 CSV
         </button>

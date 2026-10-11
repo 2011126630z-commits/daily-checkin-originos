@@ -1,8 +1,8 @@
 # 日常打卡 App - Daily Checkin
 
-> OriginOS 7 inspired daily habit tracking app with liquid glass UI
+> OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Version](https://img.shields.io/badge/version-1.0.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -10,20 +10,34 @@
 This app features a **Vivo OriginOS 7** inspired design:
 
 - **雾面灰蓝液态玻璃** (Matte Grey-Blue Liquid Glass)
+- **深色模式石墨蓝黑玻璃** (Graphite Glass Dark Mode)
 - **克制、高级、真实手机系统感**
 - **OriginOS 7 系统组件风格**
 
 ### Color Palette
+
+浅色（Light）：
 
 - **Background**: `#E9EDF4` → `#DDE3EE` → `#E7EBF3`
 - **Primary Blue**: `#315EFB` (vivo blue)
 - **Glass Cards**: `rgba(255, 255, 255, 0.35-0.45)` with blur and white highlights
 - **Text**: Dark grey `#2D3748` and light grey `#718096`
 
+深色（Dark）：
+
+- **Background**: `#12151C` → `#0D1015` → `#171C26`
+- **Primary Blue**: `#5B83FF`（深色底上提高亮度，保证对比度）
+- **Glass Cards**: `rgba(255, 255, 255, 0.06-0.09)` + 白色 10-16% 边框高光
+- **Text**: `#E8ECF4` / `#98A2B3`
+
+> 两套配色共用同一组 CSS 变量（Design Tokens），组件里没有任何硬编码颜色。
+> 主题由 `<html data-theme="system|light|dark">` 控制，`system` 跟随系统 `prefers-color-scheme`。
+
 ### Key Features
 
 - **Liquid Glass Cards**: Realistic glass effect with backdrop blur, white highlights, and soft shadows
 - **Floating Capsule Navigation**: OriginOS-style bottom navigation
+- **Dark Mode**: 跟随系统 / 手动浅色 / 手动深色，首帧不闪白
 - **Minimalist Design**: Clean, restrained, premium feel
 - **Smooth Animations**: 0.3-0.5s animations with hardware acceleration
 - **Responsive Mobile-First**: Optimized for 390×844 iPhone display
@@ -43,32 +57,50 @@ This app features a **Vivo OriginOS 7** inspired design:
 7. 🌙 早睡 23:00 前
 
 **Interaction**:
+
 - Tap circle → elastic checkmark animation
 - Task strikethrough
 - Toast notification
 - Progress bar updates
+- 连续打卡天数 + 历史最长连续
+- **跨零点自动刷新**：应用长期挂着也会在零点自动切到新的一天（并监听切回前台）
 - localStorage persistence
 
 ### Stats Page (统计页)
 
-- **Weekly Bar Chart**: Real data from localStorage
+- **Weekly Bar Chart**: 本周（周一至周日）真实数据，含「上周同期」对比
+- **Month Calendar Heatmap**: 本月日历热力图，按完成度分 5 级着色，点击查看单日明细
+- **Streak Cards**: 当前连续 / 最长连续
 - **Monthly Completion Rate**: Ring chart
 - **Recent 7 Days**: Timeline view
+- **Weight Records**: 体重记录、趋势图、单位 kg/斤、导入导出
 
 ### Profile Page (我的页)
 
 - Edit nickname
 - Edit daily goal
+- **外观切换**：跟随系统 / 浅色 / 深色
 - Two reminder toggles (morning/evening)
+- Backup export / restore（恢复时逐字段校验，脏数据会被丢弃并提示）
 - All saved to localStorage
+
+## 📲 PWA (可安装 / 离线)
+
+- `public/manifest.webmanifest`：standalone 显示模式、四种尺寸图标（含 maskable）
+- `public/sw.js`：应用外壳预缓存；导航请求网络优先、离线回退；静态资源缓存优先 + 后台更新
+- 仅在生产构建注册 Service Worker（开发环境不注册，避免干扰 HMR）
+- 手机浏览器「添加到主屏幕」后可全屏打开，断网也能使用（数据本来就在本地）
+
+发布新版本后如需强制刷新缓存，改 `public/sw.js` 里的 `CACHE_VERSION` 即可。
 
 ## 🛠 Tech Stack
 
 - **React 18** - UI framework
 - **Vite 5** - Build tool
-- **Tailwind CSS** - Styling
+- **Tailwind CSS** - Styling（关键色值统一走 CSS 变量）
 - **localStorage** - Data persistence
-- **SVG** - Custom charts (no external libraries)
+- **SVG** - Custom charts & icons (no external libraries)
+- **Service Worker** - Offline support
 
 ## 📱 Device Support
 
@@ -92,6 +124,9 @@ npm install
 # Start development server
 npm run dev
 
+# Run logic + render tests
+npm test
+
 # Build for production
 npm run build
 
@@ -104,54 +139,80 @@ npm run preview
 ```
 daily-checkin-originos/
 ├── src/
-│   ├── components/      # Reusable components
+│   ├── components/          # Reusable components
 │   │   ├── Navigation.jsx
-│   │   └── Toast.jsx
-│   ├── pages/           # Page components
+│   │   ├── Toast.jsx
+│   │   ├── WeightCard.jsx
+│   │   └── icons.jsx
+│   ├── hooks/               # Custom hooks
+│   │   ├── useToday.js      # 跨零点日期刷新
+│   │   └── useTheme.js      # 主题偏好订阅
+│   ├── pages/               # Page components
 │   │   ├── Today.jsx
 │   │   ├── Stats.jsx
 │   │   └── Profile.jsx
-│   ├── storage/         # localStorage utilities
-│   │   └── storage.js
-│   ├── styles/          # Global styles
-│   │   └── global.css
+│   ├── storage/             # localStorage utilities
+│   │   ├── storage.js
+│   │   └── weight.js
+│   ├── styles/
+│   │   └── global.css       # Design tokens + 深色模式 + 动画
+│   ├── theme.js             # 主题读写与应用
 │   ├── App.jsx
 │   └── main.jsx
 ├── public/
+│   ├── icons/               # PWA 图标（192/512/maskable/apple-touch）
+│   ├── manifest.webmanifest
+│   └── sw.js
+├── scripts/
+│   ├── gen-icons.py         # 用 Pillow 重新生成 PWA 图标
+│   ├── test-storage.mjs     # 存储层逻辑测试（15 项）
+│   └── test-render.mjs      # 所有页面 SSR 渲染冒烟测试
 ├── index.html
 ├── package.json
 ├── tailwind.config.js
 └── vite.config.js
 ```
 
+## 🧪 Testing
+
+```bash
+npm test
+```
+
+- `scripts/test-storage.mjs`：用 esbuild 打包 `src/storage/*` 后在 Node 下跑，覆盖日期校验、连续天数、
+  月历偏移、周同比窗口对齐、备份导入清洗、统计口径等 15 个用例。
+- `scripts/test-render.mjs`：用 `react-dom/server` 渲染 App 与三个页面，捕获运行时错误、缺失文案
+  以及 React 的 props/DOM 警告（任何警告都会让测试失败）。
+
 ## 🎯 OriginOS Design Principles
 
 ### 1. Matte Grey-Blue Background
 - No pure white background
 - Subtle gradient layers
-- Minimal noise texture (0.03-0.05 opacity)
+- Minimal noise texture (0.02-0.03 opacity)
 - Low-opacity grid overlay
 
 ### 2. Liquid Glass Cards
-- **Background**: `rgba(255, 255, 255, 0.35-0.45)`
+- **Background**: 浅色 `rgba(255, 255, 255, 0.35)` / 深色 `rgba(255, 255, 255, 0.06)`
 - **Backdrop Blur**: `blur(18px)`
 - **Saturation**: `140%`
-- **Border**: 1px solid rgba(255, 255, 255, 0.6)
-- **Highlight**: inset 0 1px 0 rgba(255, 255, 255, 0.8)
-- **Shadow**: `rgba(120, 140, 170, 0.15)` (no black shadows)
+- **Border**: 1px solid（浅色白 60% / 深色白 10%）
+- **Highlight**: inset 0 1px 0
+- **Shadow**: 浅色 `rgba(120, 140, 170, 0.15)`；深色改为黑色阴影以保证层次
 
 ### 3. Vivo Blue Limitation
 - **Allowed**: Checkmark, progress bar, chart highlights, active tab, switch on
 - **Forbidden**: Large background areas, card fills, ordinary buttons
 - **Other**: All grey/dark grey/semi-transparent grey
+- 热力图用蓝色透明度分级表达完成度，避免整块蓝色
 
 ### 4. Floating Capsule Navigation
 - **Height**: 52px
 - **Padding**: 24px left/right, 20px bottom
 - **Radius**: 30px
-- **Background**: `rgba(255, 255, 255, 0.45)`
+- **Background**: 浅色 `rgba(255, 255, 255, 0.45)` / 深色 `rgba(24, 28, 37, 0.72)`
 - **Blur**: `20px`
-- **Active State**: `rgba(49, 94, 251, 0.06)` with blue text
+- **Active State**: 浅色 `rgba(49, 94, 251, 0.06)` / 深色 `rgba(91, 131, 255, 0.18)` with blue text
 
 ## 📊 Data Persistence
 
@@ -167,9 +228,17 @@ All data stored in localStorage:
     "goal": "完成所有任务",
     "morningReminder": true,
     "eveningReminder": true
-  }
+  },
+  "weightRecords": [
+    { "id": "w_xxx", "timestamp": "2026-10-11T08:00:00.000Z", "weightKg": 70.5, "source": "manual" }
+  ],
+  "weightUnit": "kg",
+  "themePreference": "system"
 }
 ```
+
+- 备份/恢复覆盖 `checkinData` / `profile` / `weightRecords` / `weightUnit`（主题偏好属于设备级设置，不参与迁移）。
+- 恢复时会逐字段校验：非法日期、非数组结构、超范围体重、错误类型都会被丢弃，并提示忽略了多少处。
 
 ## 🎨 Animations
 

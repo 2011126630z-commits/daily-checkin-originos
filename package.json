@@ -1,12 +1,13 @@
 {
   "name": "daily-checkin-originos",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node scripts/test-storage.mjs && node scripts/test-render.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",
