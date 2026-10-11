@@ -1,0 +1,85 @@
+name: Build Android APK
+
+# 打 tag（v1.0.4 这种）会构建 APK 并作为 Release 附件上传，手机上直接下载安装；
+# main 分支改动也会构建，方便随时拿到最新的调试包。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.js'
+      - '.github/workflows/android.yml'
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platforms;android-36 build-tools;36.0.0 platform-tools'
+
+      - run: npm ci
+      - run: npm test
+
+      # 用根路径打包：Capacitor 里资源从 https://localhost/ 提供，不能带 GitHub Pages 子路径
+      - run: npm run build:app
+      - run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Collect APK
+        run: |
+          mkdir -p out
+          VERSION=$(node -p "require('./package.json').version")
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/daily-checkin-v${VERSION}.apk"
+          ls -lh out
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: daily-checkin-apk
+          path: out/*.apk
+          if-no-files-found: error
+
+      - name: Attach APK to Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v3
+        with:
+          files: out/*.apk
+          generate_release_notes: true
+          body: |
+            安卓安装包（debug 签名，可直接安装）。
+
+            安装方式：手机浏览器打开本页 → 下载 `.apk` → 允许「安装未知来源应用」→ 安装。
+
+            首次打开即包含完整离线数据，打卡记录保存在手机本地。

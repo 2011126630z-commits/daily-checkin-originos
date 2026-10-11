@@ -14,7 +14,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 )
 
 // PWA：仅在生产构建注册 Service Worker（开发环境不注册，避免缓存干扰热更新）
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+// 原生 App(Capacitor) 里资源是打进 APK 的，不需要 SW，跳过注册
+const isNativeApp = typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform
+  ? window.Capacitor.isNativePlatform()
+  : false
+
+if (import.meta.env.PROD && !isNativeApp && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register(`${import.meta.env.BASE_URL}sw.js`, { scope: import.meta.env.BASE_URL })

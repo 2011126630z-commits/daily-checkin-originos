@@ -68,7 +68,18 @@ if (run('npm', ['run', 'build']).status !== 0) fail('构建失败，已中止发
 console.log('\n▶ 推送到 GitHub');
 if (run('git', ['push', 'origin', 'main']).status !== 0) fail('推送失败');
 
-// ---- 4. 结果 ----
+// ---- 4. 打标签（触发 APK 构建并挂到 Release） ----
+const tag = `v${version}`;
+if (capture('git', ['tag', '-l', tag]).out) {
+  console.log(`\nℹ 标签 ${tag} 已存在，跳过打标签`);
+} else {
+  console.log(`\n▶ 打标签 ${tag}`);
+  if (run('git', ['tag', '-a', tag, '-m', `release ${tag}`]).status !== 0) fail('创建标签失败');
+  if (run('git', ['push', 'origin', tag]).status !== 0) fail('推送标签失败');
+}
+
+// ---- 5. 结果 ----
 console.log(`\n✓ v${version} 已上传：https://github.com/2011126630z-commits/daily-checkin-originos`);
-console.log(`  GitHub Actions 会自动构建并部署到：${PAGES_URL}`);
-console.log('  查看部署进度：gh run list --limit 3\n');
+console.log(`  · 网页版（Pages）自动部署：${PAGES_URL}`);
+console.log(`  · 安卓 APK 构建完成后挂到：https://github.com/2011126630z-commits/daily-checkin-originos/releases/tag/${tag}`);
+console.log('  查看进度：gh run list --limit 5\n');

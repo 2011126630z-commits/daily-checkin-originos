@@ -1,0 +1,12 @@
+{
+  "appId": "com.dailycheckin.originos",
+  "appName": "日常打卡",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#E9EDF4",
+    "allowMixedContent": false
+  }
+}
