@@ -95,15 +95,17 @@ This app features a **Vivo OriginOS 7** inspired design:
 
 ## 📱 安卓 APK
 
-手机安装包由 GitHub Actions 自动构建，**下载地址**：
+手机安装包由 GitHub Actions 自动构建，**两个下载入口**：
 
-> <https://github.com/2011126630z-commits/daily-checkin-originos/releases/latest>
+1. **仓库里直接取**（跟着代码一起 clone / pull）：
+   [`apk/daily-checkin-vX.Y.Z.apk`](https://github.com/2011126630z-commits/daily-checkin-originos/tree/main/apk)
+2. **Release 附件**：<https://github.com/2011126630z-commits/daily-checkin-originos/releases/latest>
 
-（每个 tag 版本对应一个 Release，附件就是 `daily-checkin-vX.Y.Z.apk`）
+打 `v*` 标签后，CI 会同时把 APK 作为 Release 附件上传，并提交到仓库的 `apk/` 目录。
 
 安装步骤：
 
-1. 手机浏览器打开上面的链接，下载 `.apk`
+1. 打开上面任一入口，下载 `.apk`
 2. 系统提示「禁止安装未知应用」时，允许该浏览器安装
 3. 安装后打开即可用，**完全离线**（网页资源已打进 APK，数据存在手机本地）
 

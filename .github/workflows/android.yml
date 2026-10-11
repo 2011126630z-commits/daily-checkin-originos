@@ -84,3 +84,23 @@ jobs:
             安装方式：手机浏览器打开本页 → 下载 `.apk` → 允许「安装未知来源应用」→ 安装。
 
             首次打开即包含完整离线数据，打卡记录保存在手机本地。
+
+      # 同时把 APK 提交进仓库 apk/ 目录，方便直接 clone / pull 拿到安装包
+      - name: Commit APK into repository
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          mkdir -p apk
+          cp "out/daily-checkin-v${VERSION}.apk" apk/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apk
+          if git diff --cached --quiet; then
+            echo "仓库中已存在 v${VERSION} 的 APK，跳过提交"
+          else
+            git commit -m "chore(release): 上传 v${VERSION} APK [skip ci]"
+            git push origin main
+          fi
