@@ -15,6 +15,9 @@ dist-ssr
 # 本地视觉验证产物（headless 截图 / 临时脚本）
 .shots/
 
+# 本地构建出来的安装包（正式分发包在 GitHub Release 上）
+release/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
