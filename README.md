@@ -184,6 +184,31 @@ npm test
 - `scripts/test-render.mjs`：用 `react-dom/server` 渲染 App 与三个页面，捕获运行时错误、缺失文案
   以及 React 的 props/DOM 警告（任何警告都会让测试失败）。
 
+## 🚀 发布流程
+
+代码托管在 [2011126630z-commits/daily-checkin-originos](https://github.com/2011126630z-commits/daily-checkin-originos)，
+线上地址：<https://2011126630z-commits.github.io/daily-checkin-originos/>
+
+**每发布一个版本：**
+
+```bash
+# 1. 改 package.json 里的 version（版本号是唯一来源，页面「我的」会自动显示）
+# 2. 提交改动
+git add -A && git commit -m "feat: v1.0.4 - ..."
+
+# 3. 一键发布：校验仓库/工作区 → 跑测试 → 构建 → 推送到 GitHub
+npm run release
+```
+
+`npm run release` 会依次做这些事：
+
+1. 校验 `origin` 指向目标仓库、当前在 `main`、工作区干净（有未提交改动会直接中止）
+2. 跑 `npm test` 与 `npm run build`，任一失败都不推送
+3. `git push origin main`
+4. 推送后 GitHub Actions（`.github/workflows/deploy.yml`）自动 `npm ci → npm test → build → 部署 Pages`
+
+> 部署失败不会影响线上已发布的版本；可用 `gh run list --limit 3` 查看部署进度。
+
 ## 🎯 OriginOS Design Principles
 
 ### 1. Matte Grey-Blue Background

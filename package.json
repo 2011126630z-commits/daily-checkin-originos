@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node scripts/test-storage.mjs && node scripts/test-render.mjs"
+    "test": "node scripts/test-storage.mjs && node scripts/test-render.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "react": "^18.2.0",
