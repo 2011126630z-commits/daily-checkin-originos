@@ -5,15 +5,16 @@ import {
   toggleCheckin,
   getProfile,
 } from '../storage/storage';
+import { TASK_ICONS, IconCheck } from '../components/icons';
 
 const TASKS = [
-  { id: 0, icon: '💧', title: '喝水 2L', desc: '保持身体水分充足' },
-  { id: 1, icon: '🏋️', title: '健身房训练', desc: '力量或有氧训练' },
-  { id: 2, icon: '🍗', title: '吃够蛋白质', desc: '每公斤体重 1.6g 以上' },
-  { id: 3, icon: '🥬', title: '吃蔬菜', desc: '至少一份绿叶蔬菜' },
-  { id: 4, icon: '📚', title: '背单词 30 个', desc: '坚持每日积累' },
-  { id: 5, icon: '📖', title: '复习数学 1 小时', desc: '保持数学思维敏捷' },
-  { id: 6, icon: '🌙', title: '早睡 23:00 前', desc: '保证充足睡眠' },
+  { id: 0, title: '喝水 2L', desc: '保持身体水分充足' },
+  { id: 1, title: '健身房训练', desc: '力量或有氧训练' },
+  { id: 2, title: '吃够蛋白质', desc: '每公斤体重 1.6g 以上' },
+  { id: 3, title: '吃蔬菜', desc: '至少一份绿叶蔬菜' },
+  { id: 4, title: '背单词 30 个', desc: '坚持每日积累' },
+  { id: 5, title: '复习数学 1 小时', desc: '保持数学思维敏捷' },
+  { id: 6, title: '早睡 23:00 前', desc: '保证充足睡眠' },
 ];
 
 const Today = ({ showToast }) => {
@@ -39,7 +40,7 @@ const Today = ({ showToast }) => {
     if (newState) {
       setJustChecked(index);
       setTimeout(() => setJustChecked(null), 500);
-      showToast(`✓ ${TASKS[index].title} 已完成`);
+      showToast(`已完成：${TASKS[index].title}`);
     } else {
       showToast(`已取消：${TASKS[index].title}`);
     }
@@ -82,7 +83,7 @@ const Today = ({ showToast }) => {
           <div className="text-right">
             <p className="text-2xl font-bold originos-blue">{progress}%</p>
             <p className="text-xs originos-text-light">
-              {progress === 100 ? '全部完成 🎉' : progress >= 50 ? '继续加油' : '开始打卡吧'}
+              {progress === 100 ? '全部完成' : progress >= 50 ? '继续加油' : '开始打卡吧'}
             </p>
           </div>
         </div>
@@ -99,31 +100,22 @@ const Today = ({ showToast }) => {
       <section className="space-y-3">
         {TASKS.map((task, index) => {
           const isDone = checkData[index];
+          const TaskIcon = TASK_ICONS[index];
           return (
             <button
               key={task.id}
               onClick={() => handleToggle(index)}
               className="originos-card w-full p-4 flex items-center gap-4 text-left active:scale-[0.97] transition-transform duration-200"
             >
-              {/* Check Circle */}
+              {/* Task Icon (inline SVG) */}
               <span
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-colors duration-300 ${
                   isDone
-                    ? 'originos-blue-bg originos-checkmark'
-                    : 'border-2 border-[rgba(120,140,170,0.35)]'
-                } ${justChecked === index ? 'originos-checkmark' : ''}`}
+                    ? 'text-[#8B919A] bg-[rgba(120,140,170,0.08)]'
+                    : 'originos-text-light bg-[rgba(120,140,170,0.1)]'
+                }`}
               >
-                {isDone && (
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path
-                      d="M3.5 8.5L6.5 11.5L12.5 4.5"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
+                <TaskIcon size={18} />
               </span>
 
               {/* Task Info */}
@@ -133,11 +125,22 @@ const Today = ({ showToast }) => {
                     isDone ? 'originos-text-light line-through' : 'originos-text'
                   }`}
                 >
-                  {task.icon} {task.title}
+                  {task.title}
                 </span>
                 <span className={`block text-xs mt-0.5 transition-opacity duration-300 ${isDone ? 'opacity-50' : 'originos-text-light'}`}>
                   {task.desc}
                 </span>
+              </span>
+
+              {/* Check Circle */}
+              <span
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isDone
+                    ? 'originos-blue-bg text-white originos-checkmark'
+                    : 'border-2 border-[rgba(120,140,170,0.35)]'
+                } ${justChecked === index ? 'originos-checkmark' : ''}`}
+              >
+                {isDone && <IconCheck size={16} />}
               </span>
             </button>
           );
@@ -147,7 +150,7 @@ const Today = ({ showToast }) => {
       {/* Completion Message */}
       {progress === 100 && (
         <div className="originos-card originos-scale-in p-4 mt-5 text-center">
-          <p className="text-lg font-medium originos-text">🎉 今日全部完成！</p>
+          <p className="text-lg font-medium originos-text">今日全部完成</p>
           <p className="text-sm originos-text-light mt-1">坚持就是胜利，明天继续保持</p>
         </div>
       )}

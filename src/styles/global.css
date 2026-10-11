@@ -62,7 +62,10 @@ body::after {
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(120, 140, 170, 0.15);
+  /* 柔和灰蓝外阴影 + 真实生效的顶部内高光 */
+  box-shadow:
+    0 10px 30px rgba(120, 140, 170, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   position: relative;
   overflow: hidden;
 }
@@ -77,14 +80,13 @@ body::after {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
 }
 
+/* 内高光:inset box-shadow 才是有效写法(background: inset ... 是无效 CSS) */
 .originos-card::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
   pointer-events: none;
 }
 
@@ -164,8 +166,7 @@ body::after {
 }
 
 .originos-nav-icon {
-  font-size: 18px;
-  line-height: 1;
+  line-height: 0;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -261,7 +262,7 @@ body::after {
   }
 }
 
-/* Toast Notification */
+/* Toast Notification(始终挂载,.show 类控制滑入/滑出) */
 .originos-toast {
   position: fixed;
   top: 20px;
@@ -269,12 +270,18 @@ body::after {
   transform: translateX(-50%) translateY(-100px);
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: 12px;
   padding: 12px 20px;
   box-shadow: 0 10px 30px rgba(120, 140, 170, 0.2);
   z-index: 1000;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  max-width: calc(100vw - 48px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .originos-toast.show {

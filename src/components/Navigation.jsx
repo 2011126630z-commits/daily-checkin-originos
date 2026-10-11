@@ -1,10 +1,11 @@
 import React from 'react';
+import { IconCalendar, IconChart, IconUser } from './icons';
 
 const Navigation = ({ activeTab, setActiveTab }) => {
   const tabs = [
-    { id: 'today', icon: '📅', label: '今日' },
-    { id: 'stats', icon: '📊', label: '统计' },
-    { id: 'profile', icon: '👤', label: '我的' },
+    { id: 'today', Icon: IconCalendar, label: '今日' },
+    { id: 'stats', Icon: IconChart, label: '统计' },
+    { id: 'profile', Icon: IconUser, label: '我的' },
   ];
 
   return (
@@ -15,15 +16,18 @@ const Navigation = ({ activeTab, setActiveTab }) => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`originos-nav-item ${isActive ? 'active' : ''} flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 active:scale-[0.97]`}
+            className={`originos-nav-item ${isActive ? 'active' : ''} flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 active:scale-[0.97] ${
+              isActive ? 'originos-blue' : 'originos-text-light'
+            }`}
             aria-label={tab.label}
+            aria-current={isActive ? 'page' : undefined}
           >
-            <span className="text-2xl mb-1 originos-nav-icon">
-              {tab.icon}
+            <span className="originos-nav-icon flex items-center justify-center">
+              <tab.Icon size={18} />
             </span>
             <span
-              className={`text-[10.5px] originos-nav-text originos-text-light originos-text transition-all duration-300 ${
-                isActive ? 'originos-blue font-medium' : ''
+              className={`originos-nav-text transition-all duration-300 ${
+                isActive ? 'originos-blue font-medium' : 'originos-text-light'
               }`}
             >
               {tab.label}

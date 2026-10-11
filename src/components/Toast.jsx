@@ -1,18 +1,21 @@
 import React, { useEffect } from 'react';
 
+// 始终挂载,通过 .show 类控制滑入滑出;message 变化时重置计时器
 const Toast = ({ message, show, onClose }) => {
   useEffect(() => {
     if (show) {
-      const timer = setTimeout(onClose, 2000);
+      const timer = setTimeout(onClose, 2200);
       return () => clearTimeout(timer);
     }
-  }, [show, onClose]);
-
-  if (!show) return null;
+  }, [show, message, onClose]);
 
   return (
-    <div className="originos-toast originos-fade-in">
-      <span className="originos-text originos-text font-medium">{message}</span>
+    <div
+      className={`originos-toast ${show ? 'show' : ''}`}
+      role="status"
+      aria-live="polite"
+    >
+      {message}
     </div>
   );
 };

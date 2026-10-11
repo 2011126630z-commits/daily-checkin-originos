@@ -4,11 +4,12 @@ import {
   getMonthlyCompletionRate,
   getRecentRecords,
   getStatistics,
+  getMonthSummary,
+  TASK_COUNT,
 } from '../storage/storage';
 
-// Weekly Bar Chart using SVG
+// 本周柱状图(周一至周日,SVG)
 const WeeklyChart = ({ data }) => {
-  const maxPercentage = 100;
   const chartHeight = 120;
   const barWidth = 28;
   const gap = 12;
@@ -23,10 +24,9 @@ const WeeklyChart = ({ data }) => {
         preserveAspectRatio="xMidYMid meet"
       >
         {data.map((day, i) => {
-          const barHeight = Math.max(4, (day.percentage / maxPercentage) * chartHeight);
+          const barHeight = Math.max(day.isFuture ? 4 : 4, (day.percentage / 100) * chartHeight);
           const x = i * (barWidth + gap) + 10;
           const y = chartHeight - barHeight;
-          const isToday = i === 0;
 
           return (
             <g key={day.date}>
@@ -39,18 +39,20 @@ const WeeklyChart = ({ data }) => {
                 rx={barWidth / 2}
                 fill="rgba(120, 140, 170, 0.08)"
               />
-              {/* Value bar */}
-              <rect
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                rx={barWidth / 2}
-                fill={day.percentage > 0 ? '#315EFB' : 'rgba(120, 140, 170, 0.15)'}
-                opacity={day.percentage > 0 ? (isToday ? 1 : 0.75) : 1}
-              />
+              {/* Value bar:未来日期淡显,其余按完成度着色 */}
+              {!day.isFuture && (
+                <rect
+                  x={x}
+                  y={y}
+                  width={barWidth}
+                  height={barHeight}
+                  rx={barWidth / 2}
+                  fill={day.percentage > 0 ? '#315EFB' : 'rgba(120, 140, 170, 0.15)'}
+                  opacity={day.percentage > 0 ? (day.isToday ? 1 : 0.75) : 1}
+                />
+              )}
               {/* Percentage text */}
-              {day.percentage > 0 && (
+              {day.percentage > 0 && !day.isFuture && (
                 <text
                   x={x + barWidth / 2}
                   y={y - 6}
@@ -61,16 +63,16 @@ const WeeklyChart = ({ data }) => {
                   {day.percentage}%
                 </text>
               )}
-              {/* Date label */}
+              {/* Weekday label:周一 ~ 周日 */}
               <text
                 x={x + barWidth / 2}
                 y={chartHeight + 16}
                 textAnchor="middle"
                 fontSize="10"
-                fill={isToday ? '#315EFB' : '#8B919A'}
-                fontWeight={isToday ? '600' : '400'}
+                fill={day.isToday ? '#315EFB' : '#8B919A'}
+                fontWeight={day.isToday ? '600' : '400'}
               >
-                {i === 0 ? '今天' : day.displayDate}
+                {day.isToday ? '今天' : day.label}
               </text>
             </g>
           );
@@ -80,7 +82,7 @@ const WeeklyChart = ({ data }) => {
   );
 };
 
-// Monthly Ring Chart using SVG
+// 月度环形图(SVG)
 const RingChart = ({ percentage }) => {
   const size = 140;
   const strokeWidth = 12;
@@ -127,12 +129,18 @@ const Stats = () => {
   const [monthlyRate, setMonthlyRate] = useState(0);
   const [recentRecords, setRecentRecords] = useState([]);
   const [stats, setStats] = useState({ totalDays: 0, completedTasks: 0, avgPerDay: 0 });
+  const [monthSummary, setMonthSummary] = useState({ elapsedDays: 0, trackedDays: 0, completedTasks: 0, avgPerDay: '0' });
 
   const loadData = () => {
     setWeeklyData(getWeeklyStats());
     setMonthlyRate(getMonthlyCompletionRate());
     setRecentRecords(getRecentRecords());
+    setStatisticsNow();
+  };
+
+  const setStatisticsNow = () => {
     setStats(getStatistics());
+    setMonthSummary(getMonthSummary());
   };
 
   useEffect(() => {
@@ -162,9 +170,9 @@ const Stats = () => {
         </div>
       </section>
 
-      {/* Weekly Bar Chart */}
+      {/* Weekly Bar Chart (Mon-Sun) */}
       <section className="originos-card originos-scale-in p-5 mb-5">
-        <h2 className="text-base font-medium originos-text mb-4">本周 7 天</h2>
+        <h2 className="text-base font-medium originos-text mb-4">本周（周一至周日）</h2>
         <WeeklyChart data={weeklyData} />
       </section>
 
@@ -173,7 +181,7 @@ const Stats = () => {
         <h2 className="text-base font-medium originos-text mb-4 self-start">本月完成率</h2>
         <RingChart percentage={monthlyRate} />
         <p className="text-xs originos-text-light mt-4">
-          平均每天完成 {stats.avgPerDay} / 7 项任务
+          按本月已过去的 {monthSummary.elapsedDays} 天计算 · 平均每天完成 {monthSummary.avgPerDay} / {TASK_COUNT} 项
         </p>
       </section>
 
@@ -183,8 +191,8 @@ const Stats = () => {
         <div className="space-y-3">
           {recentRecords.map((record, i) => (
             <div key={record.date} className="flex items-center gap-3">
-              <span className={`text-xs w-12 ${i === 0 ? 'originos-blue font-medium' : 'originos-text-light'}`}>
-                {i === 0 ? '今天' : record.displayDate}
+              <span className={`text-xs w-12 ${record.isToday ? 'originos-blue font-medium' : 'originos-text-light'}`}>
+                {record.isToday ? '今天' : record.displayDate}
               </span>
               <div className="flex-1 h-1.5 rounded-full bg-[rgba(120,140,170,0.12)] overflow-hidden">
                 <div
@@ -192,7 +200,7 @@ const Stats = () => {
                   style={{
                     width: `${(record.completed / record.total) * 100}%`,
                     background: '#315EFB',
-                    opacity: i === 0 ? 1 : 0.7 - i * 0.08,
+                    opacity: record.isToday ? 1 : Math.max(0.3, 0.7 - i * 0.08),
                   }}
                 />
               </div>
