@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# 本地视觉验证产物（headless 截图 / 临时脚本）
+.shots/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
