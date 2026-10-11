@@ -93,6 +93,39 @@ This app features a **Vivo OriginOS 7** inspired design:
 
 发布新版本后如需强制刷新缓存，改 `public/sw.js` 里的 `CACHE_VERSION` 即可。
 
+## 📱 安卓 APK
+
+手机安装包由 GitHub Actions 自动构建，**下载地址**：
+
+> <https://github.com/2011126630z-commits/daily-checkin-originos/releases/latest>
+
+（每个 tag 版本对应一个 Release，附件就是 `daily-checkin-vX.Y.Z.apk`）
+
+安装步骤：
+
+1. 手机浏览器打开上面的链接，下载 `.apk`
+2. 系统提示「禁止安装未知应用」时，允许该浏览器安装
+3. 安装后打开即可用，**完全离线**（网页资源已打进 APK，数据存在手机本地）
+
+实现方式：[Capacitor 8](https://capacitorjs.com/) 把 `dist/` 打包进原生 WebView 壳，
+`appId = com.dailycheckin.originos`，`minSdk 24`（Android 7.0+）。
+
+本地自己出包（需要 JDK **21** 与 Android SDK，compileSdk 36 / build-tools 36.0.0）：
+
+```bash
+npm run build:app      # 用根路径打包网页（Capacitor 从 https://localhost/ 提供资源）
+npx cap sync android   # 同步到 android/ 工程
+cd android
+./gradlew assembleDebug
+# 产物：android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+> 工作流里 `main` 分支的改动也会构建 APK 并作为 artifact 上传（不创建 Release），
+> 打 `v*` 标签才会发布到 Release。
+>
+> 说明：发布的是 **debug 签名** 的 APK，可以正常安装使用；如果以后要上架应用商店，
+> 需要另外配置 release keystore 与 `signingConfigs`。
+
 ## 🛠 Tech Stack
 
 - **React 18** - UI framework
