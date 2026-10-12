@@ -54,7 +54,8 @@ jobs:
       - run: npx cap sync android
 
       # 固定签名：CI 每次运行都会重新生成随机 debug keystore，导致各版本签名不一致，
-      # 手机上无法覆盖安装。用仓库 secret 里的固定 keystore 覆盖掉它。
+      # 手机上无法覆盖安装。这里把固定密钥写到工作区并显式告诉 Gradle 用它
+      # （不依赖 ~/.android 默认路径，runner 上那个位置会被重定向）。
       - name: Use fixed signing keystore
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
@@ -64,14 +65,18 @@ jobs:
             echo "::error::缺少 ANDROID_DEBUG_KEYSTORE_BASE64，无法生成可覆盖安装的包"
             exit 1
           fi
-          mkdir -p "$HOME/.android"
-          printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
-          chmod 600 "$HOME/.android/debug.keystore"
-          ls -l "$HOME/.android/debug.keystore"
-          keytool -list -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/app/daily-checkin.keystore
+          chmod 600 android/app/daily-checkin.keystore
+          ls -l android/app/daily-checkin.keystore
+          keytool -list -keystore android/app/daily-checkin.keystore -storepass android -alias androiddebugkey
 
       - name: Build debug APK
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/daily-checkin.keystore
+          ANDROID_KEYSTORE_PASSWORD: android
+          ANDROID_KEY_ALIAS: androiddebugkey
+          ANDROID_KEY_PASSWORD: android
         run: |
           set -euo pipefail
           chmod +x gradlew

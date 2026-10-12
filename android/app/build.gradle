@@ -15,6 +15,17 @@ def appVersionCode =
     (versionParts.size() > 2 ? versionParts[2] : 0)
 logger.lifecycle("App version: ${appVersionName} (versionCode ${appVersionCode})")
 
+// ---- 固定签名 ----
+// 不依赖 ~/.android/debug.keystore 的默认位置（CI runner 上会被 ANDROID_USER_HOME 之类重定向，
+// 导致每个版本签名都不同、无法覆盖安装）。由环境变量显式指定密钥路径。
+def fixedKeystorePath = System.getenv('ANDROID_KEYSTORE_PATH')
+def hasFixedKeystore = fixedKeystorePath && file(fixedKeystorePath).exists()
+if (hasFixedKeystore) {
+    logger.lifecycle("Signing with fixed keystore: ${fixedKeystorePath}")
+} else {
+    logger.lifecycle('No ANDROID_KEYSTORE_PATH -> 使用默认调试签名（各次构建签名可能不同）')
+}
+
 android {
     namespace = "com.dailycheckin.originos"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -32,8 +43,26 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (hasFixedKeystore) {
+            fixed {
+                storeFile file(fixedKeystorePath)
+                storePassword System.getenv('ANDROID_KEYSTORE_PASSWORD') ?: 'android'
+                keyAlias System.getenv('ANDROID_KEY_ALIAS') ?: 'androiddebugkey'
+                keyPassword System.getenv('ANDROID_KEY_PASSWORD') ?: 'android'
+            }
+        }
+    }
     buildTypes {
+        debug {
+            if (hasFixedKeystore) {
+                signingConfig signingConfigs.fixed
+            }
+        }
         release {
+            if (hasFixedKeystore) {
+                signingConfig signingConfigs.fixed
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
