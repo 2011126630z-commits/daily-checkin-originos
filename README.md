@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.1.1-blue)
+![Version](https://img.shields.io/badge/version-1.1.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -156,6 +156,22 @@ cd android
 >
 > 说明：发布的是 **debug 签名** 的 APK，可以正常安装使用；如果以后要上架应用商店，
 > 需要另外配置 release keystore 与 `signingConfigs`。
+
+### 签名（保证能覆盖安装）
+
+Android 只在**签名一致**时才允许覆盖安装。CI 每次运行都会重新生成随机 debug keystore，
+所以早期版本（v1.1.1 及更早）各版本签名都不同，装新版必须先卸载。
+
+现已固定：
+
+- 所有版本使用同一把调试密钥，SHA-256 指纹
+  `2A:FA:F8:DB:E2:A4:A5:2E:8F:75:D8:E2:0E:D4:D0:9E:DD:BB:C5:7E:2A:84:7A:D6:9D:2A:1E:D4:94:2A:A6:B4`
+- CI 从仓库 secret `ANDROID_DEBUG_KEYSTORE_BASE64` 还原密钥到 `~/.android/debug.keystore`，
+  并在构建后**校验 APK 签名**，一旦漂移直接让构建失败
+- 本地副本：`D:\android-build\keystore\daily-checkin-debug.keystore`（**请务必留存**，
+  丢失后已安装的用户将无法再覆盖安装）
+- ⚠️ 从 v1.1.1 及更早版本升级到 v1.1.2 需要**卸载重装一次**（可在「我的 → 导出备份」先备份数据）；
+  之后所有版本都可直接覆盖安装
 
 ## 🛠 Tech Stack
 

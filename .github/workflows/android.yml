@@ -53,11 +53,43 @@ jobs:
       - run: npm run build:app
       - run: npx cap sync android
 
+      # 固定签名：CI 每次运行都会重新生成随机 debug keystore，导致各版本签名不一致，
+      # 手机上无法覆盖安装。用仓库 secret 里的固定 keystore 覆盖掉它。
+      - name: Use fixed signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::warning::缺少 ANDROID_DEBUG_KEYSTORE_BASE64，本次将使用随机调试签名（无法覆盖安装旧版本）"
+            exit 0
+          fi
+          mkdir -p "$HOME/.android"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+          echo "签名证书指纹："
+          keytool -list -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey 2>/dev/null | grep -i 'SHA256:' || true
+
       - name: Build debug APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
+
+      # 签名一旦漂移，手机就无法覆盖安装——直接把构建卡住，而不是等用户装机才发现
+      - name: Verify APK signing cert
+        working-directory: android
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          CERT=$(apksigner verify --print-certs "$APK" | grep -i 'SHA-256 digest' | head -1)
+          echo "APK $CERT"
+          EXPECTED="2A:FA:F8:DB:E2:A4:A5:2E:8F:75:D8:E2:0E:D4:D0:9E:DD:BB:C5:7E:2A:84:7A:D6:9D:2A:1E:D4:94:2A:A6:B4"
+          NORM=$(echo "$CERT" | sed 's/.*SHA-256 digest: *//' | tr 'a-f' 'A-F')
+          if [ "$NORM" = "$EXPECTED" ]; then
+            echo "✅ 签名与固定密钥一致，可覆盖安装"
+          else
+            echo "::error::APK 签名不是固定密钥（$NORM），会导致安装冲突"
+            exit 1
+          fi
 
       - name: Collect APK
         run: |
