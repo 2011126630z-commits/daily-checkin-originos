@@ -373,14 +373,14 @@ export function getWeeklyComparison() {
   };
 }
 
-// 最近 7 天记录(含今天,本地日期)
-export function getRecentRecords() {
+// 最近 N 天记录(含今天,本地日期,倒序即今天在前)
+export function getRecentRecords(count = TASK_COUNT) {
   const data = getCheckinData();
   const now = new Date();
   const todayStr = formatLocalDate(now);
   const records = [];
 
-  for (let i = 0; i < TASK_COUNT; i++) {
+  for (let i = 0; i < count; i++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
     const dateStr = formatLocalDate(d);
     const completed = countCompleted(data[dateStr]);
@@ -388,6 +388,8 @@ export function getRecentRecords() {
     records.push({
       date: dateStr,
       displayDate: `${d.getMonth() + 1}/${d.getDate()}`,
+      label: `${d.getMonth() + 1}/${d.getDate()}`,
+      weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()],
       isToday: dateStr === todayStr,
       completed,
       total: TASK_COUNT
@@ -395,6 +397,11 @@ export function getRecentRecords() {
   }
 
   return records;
+}
+
+// 补打卡：只允许「已存在的过去日期或今天」，未来日期一律拒绝
+export function isBackfillable(dateStr, todayStr = getTodayString()) {
+  return isValidDateString(dateStr) && dateStr <= todayStr;
 }
 
 // Reset all data (for testing)

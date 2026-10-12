@@ -15,8 +15,10 @@ export default defineConfig({
     port: 3000,
     host: true,
     // 忽略编辑器/工具原子写入产生的临时文件,避免 Windows 下 EBUSY 使监听器崩溃
+    // .shots 是本地无头浏览器验证产物目录（含 Edge 配置），其中的 Cookies 等文件被
+    // 浏览器锁住时会让 chokidar 抛 EBUSY 直接崩掉 dev server
     watch: {
-      ignored: ['**/*.tmpdir/**', '**/*.tmp', '**/.git/**']
+      ignored: ['**/*.tmpdir/**', '**/*.tmp', '**/.git/**', '**/.shots/**', '**/release/**']
     }
   },
   build: {

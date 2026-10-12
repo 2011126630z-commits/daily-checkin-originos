@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.0.4-blue)
+![Version](https://img.shields.io/badge/version-1.0.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -79,10 +79,25 @@ python scripts/gen-icons.py   # 需要 Pillow，重新生成全部图标
 - **跨零点自动刷新**：应用长期挂着也会在零点自动切到新的一天（并监听切回前台）
 - localStorage persistence
 
+### 补打卡（Backfill）
+
+漏打某天不用重来——今日页右上角有**专门的「补打卡」按键**：
+
+- 点开后弹出底部面板，可快捷选**最近 14 天**（每格显示星期 / 日期 / 已完成项数），
+  也能用日期选择器挑更早的日期
+- 面板里直接勾选当天完成的 7 项任务，**改一项立刻保存**，无需确认
+- **不能补未来**：选到明天及以后会提示「不能补未来的日期」并保持原选择
+- 补记的数据与当天打卡完全同构（同一份 `checkinData`），所以
+  连续天数、最长连续、月历热力图、周同比都会立即跟着更新
+- 第二个入口：统计页的月历热力图，**点击任意过去日期**也会打开同一个面板
+
+> 数据口径：补打卡不会给记录加「补」标记，统计上与当天打卡一视同仁。
+> 如果需要区分（比如统计里排除补记天数），需要扩展 `checkinData` 的结构。
+
 ### Stats Page (统计页)
 
 - **Weekly Bar Chart**: 本周（周一至周日）真实数据，含「上周同期」对比
-- **Month Calendar Heatmap**: 本月日历热力图，按完成度分 5 级着色，点击查看单日明细
+- **Month Calendar Heatmap**: 本月日历热力图，按完成度分 5 级着色，**点击过去日期可直接补打卡**
 - **Streak Cards**: 当前连续 / 最长连续
 - **Monthly Completion Rate**: Ring chart
 - **Recent 7 Days**: Timeline view

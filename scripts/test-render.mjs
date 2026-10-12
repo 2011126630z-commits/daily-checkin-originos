@@ -29,9 +29,11 @@ import App from '../../src/App.jsx';
 import Today from '../../src/pages/Today.jsx';
 import Stats from '../../src/pages/Stats.jsx';
 import Profile from '../../src/pages/Profile.jsx';
+import BackfillSheet from '../../src/components/BackfillSheet.jsx';
+import { TASKS, TASK_TOTAL } from '../../src/data/tasks.js';
 
 export const render = (C, props) => renderToString(React.createElement(C, props));
-export { App, Today, Stats, Profile };
+export { App, Today, Stats, Profile, BackfillSheet, TASKS, TASK_TOTAL };
 `
 );
 
@@ -91,9 +93,11 @@ const noop = () => {};
 
 const expectations = [
   ['App', mod.App, {}, ['喝水 2L', '今日进度']],
-  ['Today', mod.Today, { showToast: noop }, ['连续打卡', '健身房训练', 'aria-pressed']],
-  ['Stats', mod.Stats, { showToast: noop }, ['打卡日历', '最长连续', '本周（周一至周日）', '最近 7 天记录', '体重记录']],
+  ['Today', mod.Today, { showToast: noop }, ['连续打卡', '健身房训练', 'aria-pressed', '补打卡']],
+  ['Stats', mod.Stats, { showToast: noop }, ['打卡日历', '最长连续', '本周（周一至周日）', '最近 7 天记录', '体重记录', '点击任意过去日期可直接补打卡']],
   ['Profile', mod.Profile, { showToast: noop }, ['外观', '跟随系统', APP_VERSION, '数据备份与恢复', 'OriginOS 7 液态玻璃']],
+  ['BackfillSheet', mod.BackfillSheet, { initialDate: null, onClose: noop, onChanged: noop, showToast: noop },
+    ['补打卡', '不能补未来', '其他日期', 'type="date"', 'aria-modal="true"']],
 ];
 
 let failed = 0;
@@ -110,6 +114,30 @@ for (const [name, Comp, props, needles] of expectations) {
     failed += 1;
     origError(`FAIL  ${name}: ${err.message}`);
   }
+}
+
+// 补打卡入口按键必须真的存在（今日页 + 统计页日历）
+try {
+  const todayHtml = mod.render(mod.Today, { showToast: noop, onBackfill: noop });
+  assert.ok(todayHtml.includes('originos-action-pill'), '今日页缺少补打卡按键样式');
+  assert.ok(/补打卡/.test(todayHtml), '今日页缺少补打卡文案');
+  const statsHtml = mod.render(mod.Stats, { showToast: noop, onBackfill: noop });
+  assert.ok(statsHtml.includes('点击任意过去日期可直接补打卡'), '统计页缺少补打卡提示');
+  console.log('  ok  今日页/统计页的补打卡入口存在');
+} catch (err) {
+  failed += 1;
+  origError(`FAIL  补打卡入口: ${err.message}`);
+}
+
+// 任务定义必须与 storage 的 TASK_COUNT(7) 一致，防止两边漂移
+try {
+  assert.equal(mod.TASKS.length, 7, 'TASKS 数量应为 7');
+  assert.equal(mod.TASK_TOTAL, 7);
+  assert.ok(mod.TASKS.every((t) => typeof t.Icon === 'function'), '每个任务都要有图标组件');
+  console.log('  ok  TASKS 定义与 TASK_COUNT 一致（7 项）');
+} catch (err) {
+  failed += 1;
+  origError(`FAIL  TASKS 定义: ${err.message}`);
 }
 
 // 深色主题偏好下必须能正常渲染

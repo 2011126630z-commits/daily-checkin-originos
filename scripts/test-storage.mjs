@@ -247,4 +247,57 @@ check('getStatistics 只统计至少完成 1 项的日期', () => {
   assert.equal(stats.avgPerDay, 5);
 });
 
+console.log('\n[7] 补打卡');
+check('isBackfillable 只允许今天及过去的真实日期', () => {
+  const today = dateStr(new Date());
+  assert.equal(S.isBackfillable(today), true, '今天应可补');
+  assert.equal(S.isBackfillable(dateStr(shift(new Date(), -1))), true, '昨天应可补');
+  assert.equal(S.isBackfillable(dateStr(shift(new Date(), 1))), false, '明天不可补');
+  assert.equal(S.isBackfillable(dateStr(shift(new Date(), 365))), false, '未来不可补');
+  assert.equal(S.isBackfillable('2026-02-31'), false, '非法日期不可补');
+  assert.equal(S.isBackfillable('not-a-date'), false);
+  assert.equal(S.isBackfillable(''), false);
+});
+
+check('补打卡写入后连续天数与统计同步更新', () => {
+  const d1 = dateStr(shift(new Date(), -2));
+  const d2 = dateStr(shift(new Date(), -1));
+  setCheckin({});
+  assert.equal(S.getCurrentStreak(), 0);
+
+  // 模拟补打卡：直接把过去两天补上
+  S.toggleCheckin(d1, 0);
+  S.toggleCheckin(d2, 0);
+  assert.equal(S.getCurrentStreak(), 2, '补上昨天与前天后应连成 2 天');
+  assert.equal(S.getLongestStreak(), 2);
+  assert.equal(S.getStatistics().totalDays, 2);
+  // 日历里也应出现
+  const cal = S.getMonthCalendar();
+  if (d1.slice(0, 7) === dateStr(new Date()).slice(0, 7)) {
+    assert.equal(cal.days.find((d) => d.date === d1).completed, 1);
+  }
+});
+
+check('补打卡可以逐项取消，取消到 0 项后不计入连续', () => {
+  const d = dateStr(shift(new Date(), -1));
+  setCheckin({});
+  S.toggleCheckin(d, 3);
+  assert.equal(S.getCurrentStreak(), 1);
+  S.toggleCheckin(d, 3); // 再点一次取消
+  assert.equal(S.getCurrentStreak(), 0);
+  assert.equal(S.getStatistics().totalDays, 0);
+});
+
+check('getRecentRecords(count) 返回指定天数且今天在最前', () => {
+  setCheckin({});
+  const today = dateStr(new Date());
+  const r14 = S.getRecentRecords(14);
+  assert.equal(r14.length, 14);
+  assert.equal(r14[0].date, today);
+  assert.equal(r14[0].isToday, true);
+  assert.equal(r14[13].date, dateStr(shift(new Date(), -13)));
+  assert.ok(r14[0].weekday.startsWith('周'));
+  assert.equal(S.getRecentRecords().length, S.TASK_COUNT, '默认仍是 7 天');
+});
+
 console.log(`\n${process.exitCode ? '有失败用例' : `全部通过：${passed} 项`}`);

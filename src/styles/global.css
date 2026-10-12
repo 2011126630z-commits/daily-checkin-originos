@@ -54,6 +54,9 @@
   --origin-noise-opacity: 0.03;
   /* 图表圆点等需要不透明底色的元素 */
   --origin-surface-solid: #FFFFFF;
+  /* 底部面板（补打卡） */
+  --origin-sheet-bg: rgba(255, 255, 255, 0.94);
+  --origin-scrim: rgba(24, 30, 42, 0.32);
 
   /* 阴影强度（深色下必须换成黑色，否则玻璃会「发灰」） */
   --origin-scheme: light;
@@ -100,6 +103,8 @@
   --origin-grid: rgba(255, 255, 255, 0.02);
   --origin-noise-opacity: 0.02;
   --origin-surface-solid: #161B24;
+  --origin-sheet-bg: rgba(24, 28, 37, 0.96);
+  --origin-scrim: rgba(0, 0, 0, 0.55);
 
   --origin-scheme: dark;
   --origin-shadow-color: 0, 0, 0;
@@ -144,6 +149,8 @@
     --origin-sheen: rgba(255, 255, 255, 0.14);
     --origin-grid: rgba(255, 255, 255, 0.02);
     --origin-noise-opacity: 0.02;
+    --origin-sheet-bg: rgba(24, 28, 37, 0.96);
+    --origin-scrim: rgba(0, 0, 0, 0.55);
 
     --origin-scheme: dark;
     --origin-shadow-color: 0, 0, 0;
@@ -558,6 +565,110 @@ body::after {
 .heat-cell.is-empty {
   background: transparent;
   border: none;
+}
+
+/* ============================================================
+   补打卡
+   ============================================================ */
+
+/* 今日页上的专用入口按键 */
+.originos-action-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--origin-blue-soft);
+  border: 1px solid var(--origin-blue-border);
+  color: var(--origin-blue);
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 0.2s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.originos-action-pill:active {
+  transform: scale(0.96);
+}
+
+/* 底部面板 */
+.originos-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--origin-scrim);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.originos-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--origin-sheet-bg);
+  border: 1px solid var(--origin-border);
+  border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -12px 40px var(--origin-shadow-strong);
+  padding: 18px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+  animation: sheetUp 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+@keyframes sheetUp {
+  from { transform: translateY(28px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 最近两周日期条 */
+.originos-day-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.originos-day-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.originos-day-chip {
+  flex-shrink: 0;
+  min-width: 52px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  background: var(--origin-fill);
+  border: 1px solid transparent;
+  color: var(--origin-text-light);
+  font-size: 11px;
+  line-height: 1.25;
+  text-align: center;
+  transition: background-color 0.25s ease, color 0.25s ease, transform 0.15s ease;
+}
+
+.originos-day-chip:active {
+  transform: scale(0.95);
+}
+
+.originos-day-chip.is-today {
+  border-color: var(--origin-blue-border);
+}
+
+.originos-day-chip.is-selected {
+  background: var(--origin-blue-soft);
+  border-color: var(--origin-blue);
+  color: var(--origin-blue);
+}
+
+.originos-day-chip.is-selected .originos-blue {
+  color: var(--origin-blue);
 }
 
 /* Mobile Optimization */

@@ -142,7 +142,26 @@ export const IconPhone = make(
   </>
 );
 
-// 任务 id -> 图标 映射(顺序与 Today.jsx 的 TASKS 一致)
+// ---- 补打卡 ----
+export const IconCalendarPlus = make(
+  <>
+    <rect x="3" y="4.5" width="18" height="17" rx="2.5" />
+    <path d="M16 2.5v4" />
+    <path d="M8 2.5v4" />
+    <path d="M3 10h18" />
+    <path d="M12 13.2v5.2" />
+    <path d="M9.4 15.8h5.2" />
+  </>
+);
+
+export const IconClose = make(
+  <>
+    <path d="M6.5 6.5l11 11" />
+    <path d="M17.5 6.5l-11 11" />
+  </>
+);
+
+// 任务 id -> 图标 映射(顺序与 src/data/tasks.js 的 TASKS 一致)
 export const TASK_ICONS = [
   IconDroplet,
   IconDumbbell,

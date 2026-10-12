@@ -189,11 +189,16 @@ const MonthCalendar = ({ calendar, onPick }) => {
           多
         </span>
       </div>
+
+      {/* 补打卡入口说明 */}
+      <p className="text-[10px] originos-text-light mt-2 text-center">
+        点击任意过去日期可直接补打卡
+      </p>
     </section>
   );
 };
 
-const Stats = ({ showToast }) => {
+const Stats = ({ showToast, onBackfill, dataVersion = 0 }) => {
   // 首次渲染直接从 localStorage 读，避免切到统计页时先闪一帧空数据
   const [weeklyData, setWeeklyData] = useState(() => getWeeklyStats());
   const [monthlyRate, setMonthlyRate] = useState(() => getMonthlyCompletionRate());
@@ -220,22 +225,25 @@ const Stats = ({ showToast }) => {
   };
 
   useEffect(() => {
+    // 补打卡改动(dataVersion)后重新取数
+    loadData();
     // Refresh stats when page becomes visible (tab switch back)
     const onVisible = () => { if (!document.hidden) loadData(); };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, []);
+  }, [dataVersion]);
 
+  // 点击过去某天 → 直接打开补打卡面板补记
   const handlePickDay = (d) => {
     if (d.isFuture) {
       showToast('还没到这一天');
       return;
     }
-    if (d.completed === 0) {
-      showToast(`${d.day}日：未打卡`);
+    if (onBackfill) {
+      onBackfill(d.date);
       return;
     }
-    showToast(`${d.day}日：完成 ${d.completed}/${d.total} 项`);
+    showToast(d.completed === 0 ? `${d.day}日：未打卡` : `${d.day}日：完成 ${d.completed}/${d.total} 项`);
   };
 
   const deltaLabel = () => {

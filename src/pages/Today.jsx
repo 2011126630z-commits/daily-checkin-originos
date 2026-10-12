@@ -8,19 +8,10 @@ import {
   getLongestStreak,
 } from '../storage/storage';
 import { useToday } from '../hooks/useToday';
-import { TASK_ICONS, IconCheck } from '../components/icons';
+import { TASKS } from '../data/tasks';
+import { IconCheck, IconCalendarPlus } from '../components/icons';
 
-const TASKS = [
-  { id: 0, title: '喝水 2L', desc: '保持身体水分充足' },
-  { id: 1, title: '健身房训练', desc: '力量或有氧训练' },
-  { id: 2, title: '吃够蛋白质', desc: '每公斤体重 1.6g 以上' },
-  { id: 3, title: '吃蔬菜', desc: '至少一份绿叶蔬菜' },
-  { id: 4, title: '背单词 30 个', desc: '坚持每日积累' },
-  { id: 5, title: '复习数学 1 小时', desc: '保持数学思维敏捷' },
-  { id: 6, title: '早睡 23:00 前', desc: '保证充足睡眠' },
-];
-
-const Today = ({ showToast }) => {
+const Today = ({ showToast, onBackfill, dataVersion = 0 }) => {
   // 跨零点自动更新日期（修复长时间挂机后仍显示昨天的数据）
   const today = useToday();
   // 首次渲染直接读取，避免进入页面时闪一帧空状态
@@ -35,7 +26,7 @@ const Today = ({ showToast }) => {
     setProfile(getProfile());
     setStreak(getCurrentStreak());
     setLongest(getLongestStreak());
-  }, [today]);
+  }, [today, dataVersion]);
 
   const completed = checkData.filter(Boolean).length;
   const total = TASKS.length;
@@ -74,11 +65,23 @@ const Today = ({ showToast }) => {
   return (
     <div className="originos-page originos-slide-up px-5 pt-12 pb-28">
       {/* Header */}
-      <header className="mb-6">
-        <p className="text-sm originos-text-light mb-1">{dateDisplay()}</p>
-        <h1 className="text-2xl font-semibold originos-text">
-          {greeting()}{profile.nickname ? `，${profile.nickname}` : ''}
-        </h1>
+      <header className="mb-6 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm originos-text-light mb-1">{dateDisplay()}</p>
+          <h1 className="text-2xl font-semibold originos-text truncate">
+            {greeting()}{profile.nickname ? `，${profile.nickname}` : ''}
+          </h1>
+        </div>
+        {/* 补打卡专用入口 */}
+        <button
+          type="button"
+          onClick={() => onBackfill && onBackfill()}
+          aria-label="补打卡：补记过去某一天完成的任务"
+          className="originos-action-pill flex-shrink-0 mt-0.5"
+        >
+          <IconCalendarPlus size={15} />
+          补打卡
+        </button>
       </header>
 
       {/* Today Overview Card */}
@@ -125,7 +128,7 @@ const Today = ({ showToast }) => {
       <section className="space-y-3">
         {TASKS.map((task, index) => {
           const isDone = checkData[index];
-          const TaskIcon = TASK_ICONS[index];
+          const TaskIcon = task.Icon;
           return (
             <button
               key={task.id}
@@ -171,6 +174,11 @@ const Today = ({ showToast }) => {
           );
         })}
       </section>
+
+      {/* 补打卡提示 */}
+      <p className="text-center text-xs originos-text-light mt-4">
+        漏打了某一天？点右上角「补打卡」补记
+      </p>
 
       {/* Completion Message */}
       {progress === 100 && (
