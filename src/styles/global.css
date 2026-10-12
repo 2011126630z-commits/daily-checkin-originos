@@ -43,7 +43,7 @@
   --origin-check-border: rgba(120, 140, 170, 0.35);
 
   /* 组件专用 */
-  --origin-nav-bg: rgba(255, 255, 255, 0.45);
+  --origin-nav-bg: rgba(255, 255, 255, 0.82);
   --origin-nav-active: rgba(49, 94, 251, 0.06);
   --origin-toast-bg: rgba(255, 255, 255, 0.9);
   --origin-input-bg: rgba(255, 255, 255, 0.6);
@@ -93,7 +93,7 @@
   --origin-note: rgba(255, 255, 255, 0.05);
   --origin-check-border: rgba(255, 255, 255, 0.22);
 
-  --origin-nav-bg: rgba(24, 28, 37, 0.72);
+  --origin-nav-bg: rgba(24, 28, 37, 0.92);
   --origin-nav-active: rgba(91, 131, 255, 0.18);
   --origin-toast-bg: rgba(30, 35, 46, 0.92);
   --origin-input-bg: rgba(255, 255, 255, 0.06);
@@ -140,7 +140,7 @@
     --origin-note: rgba(255, 255, 255, 0.05);
     --origin-check-border: rgba(255, 255, 255, 0.22);
 
-    --origin-nav-bg: rgba(24, 28, 37, 0.72);
+    --origin-nav-bg: rgba(24, 28, 37, 0.92);
     --origin-nav-active: rgba(91, 131, 255, 0.18);
     --origin-toast-bg: rgba(30, 35, 46, 0.92);
     --origin-input-bg: rgba(255, 255, 255, 0.06);
@@ -311,27 +311,37 @@ body::after {
   border: 2px solid var(--origin-check-border);
 }
 
-/* Floating Capsule Navigation */
+/* 底部导航栏：贴底停靠（自动避开手机底部手势条/安全区） */
 .originos-nav {
   position: fixed;
-  bottom: 20px;
-  left: 24px;
-  right: 24px;
-  height: 52px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(52px + env(safe-area-inset-bottom, 0px));
   background: var(--origin-nav-bg);
   backdrop-filter: blur(20px) saturate(140%);
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--origin-border-strong);
-  border-radius: 30px;
-  box-shadow: 0 10px 30px var(--origin-shadow);
+  border-bottom: none;
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -6px 24px var(--origin-shadow);
   display: flex;
   align-items: center;
   justify-content: space-around;
-  padding: 0 6px;
+  padding: 0 6px env(safe-area-inset-bottom, 0px);
   z-index: 100;
-  max-width: 432px;
+  max-width: 480px;
   margin: 0 auto;
+  /* 移动端（Android WebView）加固：独立合成层，避免滚动时抖动/消失 */
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
   transition: background-color 0.35s ease, border-color 0.35s ease;
+}
+
+/* 页面内容底部留白：导航高度 + 安全区 */
+.originos-page {
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
 }
 
 .originos-nav::before {
@@ -342,7 +352,7 @@ body::after {
   right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--origin-highlight), transparent);
-  border-radius: 30px 30px 0 0;
+  border-radius: 22px 22px 0 0;
   pointer-events: none;
 }
 
@@ -710,7 +720,7 @@ body::after {
   }
 
   .originos-nav {
-    border-radius: 30px;
+    border-radius: 22px 22px 0 0;
   }
 
   .heat-grid {

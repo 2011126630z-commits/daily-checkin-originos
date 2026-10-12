@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue)
+![Version](https://img.shields.io/badge/version-1.1.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -49,7 +49,7 @@ python scripts/gen-icons.py   # 需要 Pillow，重新生成全部图标
 ### Key Features
 
 - **Liquid Glass Cards**: Realistic glass effect with backdrop blur, white highlights, and soft shadows
-- **Floating Capsule Navigation**: OriginOS-style bottom navigation
+- **Docked Bottom Navigation**: OriginOS-style bottom navigation, pinned to the screen edge
 - **Dark Mode**: 跟随系统 / 手动浅色 / 手动深色，首帧不闪白
 - **Minimalist Design**: Clean, restrained, premium feel
 - **Smooth Animations**: 0.3-0.5s animations with hardware acceleration
@@ -312,12 +312,12 @@ App 名称「日常打卡」的三处也已统一：`capacitor.config.json` 的 
 - **Other**: All grey/dark grey/semi-transparent grey
 - 热力图用蓝色透明度分级表达完成度，避免整块蓝色
 
-### 4. Floating Capsule Navigation
-- **Height**: 52px
-- **Padding**: 24px left/right, 20px bottom
-- **Radius**: 30px
-- **Background**: 浅色 `rgba(255, 255, 255, 0.45)` / 深色 `rgba(24, 28, 37, 0.72)`
-- **Blur**: `20px`
+### 4. Docked Bottom Navigation
+- **Height**: 52px + `env(safe-area-inset-bottom)`（自动避开手机手势条）
+- **Position**: `fixed` 贴底停靠（`bottom: 0`），全宽，顶部 22px 圆角
+- **Content**: 页面底部按 `84px + 安全区` 留白，内容从导航下方滚过
+- **Background**: 浅色 `rgba(255, 255, 255, 0.82)` / 深色 `rgba(24, 28, 37, 0.92)`
+- **Blur**: `20px`（独立合成层，避免 WebView 滚动抖动）
 - **Active State**: 浅色 `rgba(49, 94, 251, 0.06)` / 深色 `rgba(91, 131, 255, 0.18)` with blue text
 
 ## 📊 Data Persistence
