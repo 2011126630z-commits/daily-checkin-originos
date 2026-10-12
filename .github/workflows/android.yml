@@ -92,7 +92,7 @@ jobs:
           echo "apksigner = $APKSIGNER"
           CERT=$("$APKSIGNER" verify --print-certs "$APK" | grep -i 'certificate SHA-256 digest' | head -1 | sed 's/.*digest: *//' | tr -d ' \r' | tr 'a-f' 'A-F')
           echo "APK 签名 = $CERT"
-          EXPECTED="2A:FA:F8:DB:E2:A4:A5:2E:8F:75:D8:E2:0E:D4:D0:9E:DD:BB:C5:7E:2A:84:7A:D6:9D:2A:1E:D4:94:2A:A6:B4"
+          EXPECTED="2AFAF8DBE2A4A52E8F75D8E20ED4D09EDDBBC57E2A847AD69D2A1ED4942AA6B4"
           if [ "$CERT" != "$EXPECTED" ]; then
             echo "::error::APK 签名与固定密钥不一致（$CERT），会导致安装冲突"
             exit 1
