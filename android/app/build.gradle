@@ -1,5 +1,20 @@
 apply plugin: 'com.android.application'
 
+// ---- 版本号唯一来源：根目录 package.json ----
+// 避免出现「App 里显示 1.0.4、安卓系统设置里还是 1.0」这种不一致。
+// 改 package.json 的 version 即可，网页端、APK 文件名、Release 标签、系统版本号全部跟着走。
+def appPkg = new groovy.json.JsonSlurper().parseText(file('../../package.json').text)
+def appVersionName = appPkg.version.toString()
+def versionParts = appVersionName.tokenize('.').collect { part ->
+    def digits = part.replaceAll(/\D/, '')
+    digits ? digits.toInteger() : 0
+}
+def appVersionCode =
+    versionParts[0] * 10000 +
+    (versionParts.size() > 1 ? versionParts[1] : 0) * 100 +
+    (versionParts.size() > 2 ? versionParts[2] : 0)
+logger.lifecycle("App version: ${appVersionName} (versionCode ${appVersionCode})")
+
 android {
     namespace = "com.dailycheckin.originos"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,8 +23,8 @@ android {
         applicationId "com.dailycheckin.originos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

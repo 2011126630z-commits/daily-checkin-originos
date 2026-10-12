@@ -4,7 +4,8 @@ import { IconUser, IconInfo, IconBell, IconSun, IconMoon, IconPhone } from '../c
 import { useTheme } from '../hooks/useTheme';
 import { THEME_OPTIONS } from '../theme';
 
-const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.3';
+// 版本号由 Vite 从 package.json 注入（vite.config.js 的 define），见「关于」卡片
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 
 const THEME_ICONS = { system: IconPhone, light: IconSun, dark: IconMoon };
 

@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.0.3-blue)
+![Version](https://img.shields.io/badge/version-1.0.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -32,6 +32,19 @@ This app features a **Vivo OriginOS 7** inspired design:
 
 > 两套配色共用同一组 CSS 变量（Design Tokens），组件里没有任何硬编码颜色。
 > 主题由 `<html data-theme="system|light|dark">` 控制，`system` 跟随系统 `prefers-color-scheme`。
+
+### 应用图标
+
+概念：**进度环 + 对勾**（每日打卡 / 连续完成），雾面灰蓝玻璃底 + vivo 蓝主体。
+
+- 全套 35 个文件由 [scripts/gen-icons.py](scripts/gen-icons.py) 一键生成（Pillow，1024 逻辑画布 + 4x 超采样）
+- 覆盖：PWA 4 张（192/512/maskable/apple-touch）、安卓传统 launcher 圆角+圆形各 5 档、
+  自适应图标前景/背景各 5 档、11 张 splash 启动图
+- 尺寸约束：自适应前景实心主体落在中心 **66dp 安全区**内（半边长 ≤ 0.3056×画布）
+
+```bash
+python scripts/gen-icons.py   # 需要 Pillow，重新生成全部图标
+```
 
 ### Key Features
 
@@ -240,9 +253,26 @@ npm run release
 1. 校验 `origin` 指向目标仓库、当前在 `main`、工作区干净（有未提交改动会直接中止）
 2. 跑 `npm test` 与 `npm run build`，任一失败都不推送
 3. `git push origin main`
-4. 推送后 GitHub Actions（`.github/workflows/deploy.yml`）自动 `npm ci → npm test → build → 部署 Pages`
+4. 推送后自动打标签 `vX.Y.Z`，触发两个工作流：
+   - `.github/workflows/deploy.yml`：`npm ci → npm test → build → 部署 GitHub Pages`
+   - `.github/workflows/android.yml`：构建 APK → 挂到 Release 附件 + 提交进仓库 `apk/`
 
 > 部署失败不会影响线上已发布的版本；可用 `gh run list --limit 3` 查看部署进度。
+
+### 版本号唯一来源
+
+**只改 `package.json` 的 `version`**，下面这些地方全部自动跟随，不会出现对不上的情况：
+
+| 显示位置 | 取值来源 |
+|---|---|
+| 我的页「版本 vX.Y.Z」 | Vite `define` 注入 `package.json`（`vite.config.js`） |
+| 安卓系统「应用信息 → 版本」 | `android/app/build.gradle` 读取 `package.json`（`versionName` / `versionCode`） |
+| APK 文件名 `daily-checkin-vX.Y.Z.apk` | CI 读取 `package.json` |
+| GitHub Release / 标签 `vX.Y.Z` | `scripts/release.mjs` 读取 `package.json` |
+| README 版本徽章 | 手动同步（唯一的例外） |
+
+App 名称「日常打卡」的三处也已统一：`capacitor.config.json` 的 `appName`、安卓 `strings.xml` 的
+`app_name`（桌面图标名称）、网页 `<title>` 与 `apple-mobile-web-app-title`。
 
 ## 🎯 OriginOS Design Principles
 

@@ -4,7 +4,7 @@
  * 运行：node scripts/test-render.mjs
  */
 import assert from 'node:assert/strict';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import esbuild from 'esbuild';
@@ -13,6 +13,9 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = path.join(root, 'node_modules', '.dsh-test-render');
 const entry = path.join(outDir, 'entry.jsx');
 const outFile = path.join(outDir, 'bundle.mjs');
+
+// 版本号唯一来源：package.json（与 Vite 的 __APP_VERSION__ 保持一致，避免测试里写死版本）
+const APP_VERSION = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')).version;
 
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
@@ -42,7 +45,7 @@ await esbuild.build({
   jsx: 'automatic',
   // node_modules 里的包交给 node 自身解析，避免把 CJS 的 react-dom/server 打进 ESM
   packages: 'external',
-  define: { __APP_VERSION__: '"1.0.3"' },
+  define: { __APP_VERSION__: JSON.stringify(APP_VERSION) },
   logLevel: 'silent',
 });
 
@@ -90,7 +93,7 @@ const expectations = [
   ['App', mod.App, {}, ['喝水 2L', '今日进度']],
   ['Today', mod.Today, { showToast: noop }, ['连续打卡', '健身房训练', 'aria-pressed']],
   ['Stats', mod.Stats, { showToast: noop }, ['打卡日历', '最长连续', '本周（周一至周日）', '最近 7 天记录', '体重记录']],
-  ['Profile', mod.Profile, { showToast: noop }, ['外观', '跟随系统', '1.0.3', '数据备份与恢复', 'OriginOS 7 液态玻璃']],
+  ['Profile', mod.Profile, { showToast: noop }, ['外观', '跟随系统', APP_VERSION, '数据备份与恢复', 'OriginOS 7 液态玻璃']],
 ];
 
 let failed = 0;
