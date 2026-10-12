@@ -8,7 +8,7 @@
  *   1. 校验 origin 指向目标仓库、工作区必须干净（有未提交改动会中止）
  *   2. 跑测试 + 生产构建
  *   3. push origin main
- *   4. 打印 Actions / Pages 地址
+ *   4. 打并推送标签 vX.Y.Z（触发 APK 构建 → Release 附件 + 提交进 apk/）
  */
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -21,9 +21,13 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const isWin = process.platform === 'win32';
 
-// Windows 上 npm 是 npm.cmd，必须经过 shell 才能启动
+// git 直接可执行，必须 shell:false —— 否则 Windows 的 cmd 会把 `-m "release v1.0.4"`
+// 这类带空格的参数拆开，导致 git tag 报错
 const run = (cmd, args, opts = {}) =>
-  spawnSync(cmd, args, { cwd: root, stdio: 'inherit', shell: isWin, ...opts });
+  spawnSync(cmd, args, { cwd: root, stdio: 'inherit', shell: false, ...opts });
+
+// Windows 上 npm 是 npm.cmd，必须经过 shell 才能启动
+const runNpm = (args) => run('npm', args, { shell: isWin });
 
 const capture = (cmd, args) => {
   const r = spawnSync(cmd, args, { cwd: root, encoding: 'utf8' });
@@ -59,10 +63,10 @@ console.log(`\n准备发布 v${version} (${head}) → ${branch}\n`);
 
 // ---- 2. 测试 + 构建 ----
 console.log('▶ 运行测试');
-if (run('npm', ['test']).status !== 0) fail('测试未通过，已中止发布');
+if (runNpm(['test']).status !== 0) fail('测试未通过，已中止发布');
 
 console.log('\n▶ 生产构建');
-if (run('npm', ['run', 'build']).status !== 0) fail('构建失败，已中止发布');
+if (runNpm(['run', 'build']).status !== 0) fail('构建失败，已中止发布');
 
 // ---- 3. 推送 ----
 console.log('\n▶ 推送到 GitHub');
