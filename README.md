@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.1.2-blue)
+![Version](https://img.shields.io/badge/version-1.1.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design

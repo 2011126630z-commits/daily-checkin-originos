@@ -70,7 +70,8 @@ jobs:
           ls -l android/app/daily-checkin.keystore
           keytool -list -keystore android/app/daily-checkin.keystore -storepass android -alias androiddebugkey
 
-      - name: Build debug APK
+      # 出正式包（release，非 debuggable）：部分国产 ROM 会拦截 debuggable 的调试包
+      - name: Build release APK
         working-directory: android
         env:
           ANDROID_KEYSTORE_PATH: ${{ github.workspace }}/android/app/daily-checkin.keystore
@@ -80,14 +81,14 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleRelease --no-daemon
 
       # 签名一旦漂移，手机就无法覆盖安装——直接把构建卡住，而不是等用户装机才发现
       - name: Verify APK signing cert
         working-directory: android
         run: |
           set -euo pipefail
-          APK=app/build/outputs/apk/debug/app-debug.apk
+          APK=app/build/outputs/apk/release/app-release.apk
           APKSIGNER=$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}" -type f -name apksigner | sort -V | tail -1)
           echo "apksigner = $APKSIGNER"
           CERT=$("$APKSIGNER" verify --print-certs "$APK" | grep -i 'certificate SHA-256 digest' | head -1 | sed 's/.*digest: *//' | tr -d ' \r' | tr 'a-f' 'A-F')
@@ -97,13 +98,18 @@ jobs:
             echo "::error::APK 签名与固定密钥不一致（$CERT），会导致安装冲突"
             exit 1
           fi
-          echo "✅ 签名固定，新版本可直接覆盖安装"
+          AAPT=$(find "${ANDROID_HOME:-$ANDROID_SDK_ROOT}" -type f -name aapt2 | sort -V | tail -1)
+          if "$AAPT" dump xmltree --file AndroidManifest.xml "$APK" | grep -q 'debuggable'; then
+            echo "::error::产物是 debuggable 包，部分 ROM 会拒绝安装"
+            exit 1
+          fi
+          echo "✅ 固定签名 + 非调试包，新版本可直接覆盖安装"
 
       - name: Collect APK
         run: |
           mkdir -p out
           VERSION=$(node -p "require('./package.json').version")
-          cp android/app/build/outputs/apk/debug/app-debug.apk "out/daily-checkin-v${VERSION}.apk"
+          cp android/app/build/outputs/apk/release/app-release.apk "out/daily-checkin-v${VERSION}.apk"
           ls -lh out
 
       - uses: actions/upload-artifact@v7
