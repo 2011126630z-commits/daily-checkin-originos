@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getProfile, saveProfile, exportBackup, importBackup } from '../storage/storage';
-import { IconUser, IconInfo, IconBell, IconSun, IconMoon, IconPhone } from '../components/icons';
+import { getProfile, saveProfile, exportBackup, importBackup, getTasks } from '../storage/storage';
+import { IconUser, IconInfo, IconBell, IconSun, IconMoon, IconPhone, IconCheck } from '../components/icons';
 import { useTheme } from '../hooks/useTheme';
 import { THEME_OPTIONS } from '../theme';
 
@@ -9,7 +9,7 @@ const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '
 
 const THEME_ICONS = { system: IconPhone, light: IconSun, dark: IconMoon };
 
-const Profile = ({ showToast }) => {
+const Profile = ({ showToast, onOpenTasks, dataVersion = 0 }) => {
   const [profile, setProfile] = useState({
     nickname: '',
     goal: '',
@@ -214,8 +214,10 @@ const Profile = ({ showToast }) => {
                 key={opt.value}
                 role="radio"
                 aria-checked={active}
-                onClick={() => {
-                  setTheme(opt.value);
+                onClick={(e) => {
+                  const r = e.currentTarget.getBoundingClientRect();
+                  // 以按钮中心为圆心做圆形扩散
+                  setTheme(opt.value, { x: r.left + r.width / 2, y: r.top + r.height / 2 });
                   showToast(`外观已切换为「${opt.label}」`);
                 }}
                 className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-2xl transition-all duration-300 active:scale-[0.97] ${
@@ -238,6 +240,29 @@ const Profile = ({ showToast }) => {
             深色模式使用石墨蓝黑玻璃，与浅色模式共用同一套数据；「跟随系统」会随手机深浅色自动切换。
           </p>
         </div>
+      </section>
+
+      {/* Tasks */}
+      <section className="originos-card originos-scale-in p-5 mb-5">
+        <h2 className="text-sm originos-text-light mb-4">任务</h2>
+        <button
+          type="button"
+          onClick={() => onOpenTasks && onOpenTasks()}
+          className="w-full flex items-center justify-between active:scale-[0.98] transition-transform"
+        >
+          <span className="flex items-center gap-3">
+            <span className="originos-text-light flex-shrink-0">
+              <IconCheck size={18} />
+            </span>
+            <span className="text-left">
+              <span className="block text-[15px] originos-text">任务设置</span>
+              <span className="block text-xs originos-text-light mt-0.5">
+                增删改、排序，共 {getTasks().length} 项
+              </span>
+            </span>
+          </span>
+          <span className="originos-text-light text-lg leading-none">›</span>
+        </button>
       </section>
 
       {/* Reminder Card */}

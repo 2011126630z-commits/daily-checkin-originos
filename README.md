@@ -2,7 +2,7 @@
 
 > OriginOS 7 inspired daily habit tracking app with liquid glass UI（含深色模式与 PWA）
 
-![Version](https://img.shields.io/badge/version-1.0.5-blue)
+![Version](https://img.shields.io/badge/version-1.1.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## 🎨 Design
@@ -59,7 +59,7 @@ python scripts/gen-icons.py   # 需要 Pillow，重新生成全部图标
 
 ### Today Page (今日页)
 
-7 fixed daily tasks:
+默认 7 个任务，**可以在「我的 → 任务设置」里自由增删改、排序**（最多 12 个）：
 
 1. 💧 喝水 2L
 2. 🏋️ 健身房训练
@@ -107,7 +107,8 @@ python scripts/gen-icons.py   # 需要 Pillow，重新生成全部图标
 
 - Edit nickname
 - Edit daily goal
-- **外观切换**：跟随系统 / 浅色 / 深色
+- **任务设置**：任务增删改、上下排序、12 种图标可选、一键恢复默认
+- **外观切换**：跟随系统 / 浅色 / 深色，切换时以按钮为圆心做**圆形扩散过渡**（View Transitions API，不支持时自动降级为全局颜色渐变，并遵守 `prefers-reduced-motion`）
 - Two reminder toggles (morning/evening)
 - Backup export / restore（恢复时逐字段校验，脏数据会被丢弃并提示）
 - All saved to localStorage
@@ -326,8 +327,11 @@ All data stored in localStorage:
 ```javascript
 {
   "checkinData": {
-    "2026-10-11": [true, false, true, true, false, true, false]
+    "2026-10-11": { "water": true, "protein": true, "veggie": true, "math": true }
   },
+  "tasks": [
+    { "id": "water", "title": "喝水 2L", "desc": "保持身体水分充足", "icon": "droplet" }
+  ],
   "profile": {
     "nickname": "你的名字",
     "goal": "完成所有任务",
@@ -342,8 +346,11 @@ All data stored in localStorage:
 }
 ```
 
-- 备份/恢复覆盖 `checkinData` / `profile` / `weightRecords` / `weightUnit`（主题偏好属于设备级设置，不参与迁移）。
-- 恢复时会逐字段校验：非法日期、非数组结构、超范围体重、错误类型都会被丢弃，并提示忽略了多少处。
+- 打卡记录**按任务 id 保存**（不是按下标），所以任务的增删改排序都不会让历史记录错位；改名/改图标同样不影响。
+- 旧版本的 `[true,false,...]` 数组格式会在读取时**自动迁移**成 id 映射，老用户无需手动处理。
+- 删除任务时会同步清掉该任务的历史打卡，避免统计被多算。
+- 备份/恢复覆盖 `checkinData` / `profile` / `weightRecords` / `weightUnit` / `tasks`（主题偏好属于设备级设置，不参与迁移）。
+- 恢复时会逐字段校验：非法日期、非数组/非对象结构、超范围体重、错误类型都会被丢弃，并提示忽略了多少处。
 
 ## 🎨 Animations
 

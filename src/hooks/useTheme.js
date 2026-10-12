@@ -7,8 +7,9 @@ export function useTheme() {
 
   useEffect(() => subscribeTheme(setPreference), []);
 
-  const change = useCallback((pref) => {
-    setThemePreference(pref);
+  // origin：外观切换动画的圆心（按钮中心），不传则用屏幕中心
+  const change = useCallback((pref, origin = null) => {
+    setThemePreference(pref, origin);
   }, []);
 
   return [preference, change];

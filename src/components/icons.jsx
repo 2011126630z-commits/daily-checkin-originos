@@ -161,13 +161,24 @@ export const IconClose = make(
   </>
 );
 
-// 任务 id -> 图标 映射(顺序与 src/data/tasks.js 的 TASKS 一致)
-export const TASK_ICONS = [
-  IconDroplet,
-  IconDumbbell,
-  IconEgg,
-  IconLeaf,
-  IconBookOpen,
-  IconCalculator,
-  IconMoon,
-];
+// 任务可选图标：storage 里只存字符串 key，避免让 storage 依赖 React
+export const TASK_ICON_MAP = {
+  droplet: IconDroplet,
+  dumbbell: IconDumbbell,
+  egg: IconEgg,
+  leaf: IconLeaf,
+  book: IconBookOpen,
+  calculator: IconCalculator,
+  moon: IconMoon,
+  sun: IconSun,
+  bell: IconBell,
+  check: IconCheck,
+  user: IconUser,
+  chart: IconChart,
+};
+
+export const TASK_ICON_KEYS = Object.keys(TASK_ICON_MAP);
+
+export function getTaskIcon(key) {
+  return TASK_ICON_MAP[key] || IconCheck;
+}

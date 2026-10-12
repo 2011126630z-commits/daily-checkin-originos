@@ -65,19 +65,34 @@ check('isValidDateString 拒绝 2026-02-31 / 2026-13-01', () => {
   assert.equal(S.isValidDateString('2026-02-28'), true);
 });
 
-check('sanitizeDayData 补齐为 7 个布尔值', () => {
-  assert.deepEqual(S.sanitizeDayData([true, 1]), [true, true, false, false, false, false, false]);
-  assert.deepEqual(S.sanitizeDayData('broken'), Array(7).fill(false));
-  assert.deepEqual(S.sanitizeDayData([true, false, true, true, false, true, false, true]).length, 7);
+check('sanitizeTasks 过滤非法项并去重 id', () => {
+  const tasks = S.sanitizeTasks([
+    { id: 'a', title: ' 跑步 ' },
+    { id: 'a', title: '重名 id' },
+    { title: '没 id 也有标题' },
+    { title: '   ' },
+    'not-an-object',
+    { id: 'x', title: '喝水', icon: 'droplet', desc: 'd' },
+  ]);
+  assert.equal(tasks.length, 4);
+  assert.equal(tasks[0].title, '跑步');
+  assert.equal(tasks[1].id, 'a_1', '重复 id 要自动改名');
+  assert.ok(tasks[0].icon, '缺省要有 icon');
+  assert.equal(new Set(tasks.map((t) => t.id)).size, tasks.length, 'id 必须唯一');
+  assert.equal(S.sanitizeTasks('broken'), null);
+  assert.equal(S.sanitizeTasks([...Array(20)].map((_, i) => ({ id: `t${i}`, title: `任务${i}` }))).length, S.MAX_TASKS);
 });
 
-check('getCheckinForDate 遇到脏存储不抛错', () => {
-  setCheckin({ [todayKey]: { not: 'array' } });
-  assert.deepEqual(S.getCheckinForDate(todayKey), Array(7).fill(false));
-  setCheckin({ [todayKey]: [true, true] });
-  assert.deepEqual(S.getCheckinForDate(todayKey), [true, true, false, false, false, false, false]);
+check('getCheckinForDate 兼容旧数组并容错', () => {
+  setCheckin({ [todayKey]: { water: true, gym: true } });
+  assert.deepEqual(S.getCheckinForDate(todayKey), { water: true, gym: true });
+  // 旧版数组按下标映射到默认任务 id
+  setCheckin({ [todayKey]: [true, false, true] });
+  assert.deepEqual(S.getCheckinForDate(todayKey), { water: true, protein: true });
+  setCheckin({ [todayKey]: 'broken' });
+  assert.deepEqual(S.getCheckinForDate(todayKey), {});
   setCheckin({});
-  assert.deepEqual(S.getCheckinForDate(todayKey), Array(7).fill(false));
+  assert.deepEqual(S.getCheckinForDate(todayKey), {});
 });
 
 console.log('\n[2] 连续天数');
@@ -191,7 +206,7 @@ check('exportBackup → importBackup 往返一致', () => {
   assert.equal(res.ok, true);
   assert.equal(res.keys.length, 4);
   assert.equal(res.dropped, 0);
-  assert.deepEqual(S.getCheckinForDate('2026-05-01'), [true, true, true, false, false, false, true]);
+  assert.deepEqual(S.getCheckinForDate('2026-05-01'), { water: true, gym: true, protein: true, sleep: true });
   assert.equal(JSON.parse(localStorage.getItem('profile')).nickname, '小明');
   assert.equal(JSON.parse(localStorage.getItem('weightRecords')).length, 1);
 });
@@ -244,7 +259,8 @@ check('getStatistics 只统计至少完成 1 项的日期', () => {
   const stats = S.getStatistics();
   assert.equal(stats.totalDays, 2);
   assert.equal(stats.completedTasks, 9);
-  assert.equal(stats.avgPerDay, 5);
+  assert.equal(stats.avgPerDay, 4.5);
+  assert.equal(stats.completionRate, Math.round((9 / (2 * 7)) * 100));
 });
 
 console.log('\n[7] 补打卡');
@@ -266,8 +282,8 @@ check('补打卡写入后连续天数与统计同步更新', () => {
   assert.equal(S.getCurrentStreak(), 0);
 
   // 模拟补打卡：直接把过去两天补上
-  S.toggleCheckin(d1, 0);
-  S.toggleCheckin(d2, 0);
+  S.toggleCheckin(d1, 'water');
+  S.toggleCheckin(d2, 'water');
   assert.equal(S.getCurrentStreak(), 2, '补上昨天与前天后应连成 2 天');
   assert.equal(S.getLongestStreak(), 2);
   assert.equal(S.getStatistics().totalDays, 2);
@@ -281,11 +297,34 @@ check('补打卡写入后连续天数与统计同步更新', () => {
 check('补打卡可以逐项取消，取消到 0 项后不计入连续', () => {
   const d = dateStr(shift(new Date(), -1));
   setCheckin({});
-  S.toggleCheckin(d, 3);
+  S.toggleCheckin(d, 'veggie');
   assert.equal(S.getCurrentStreak(), 1);
-  S.toggleCheckin(d, 3); // 再点一次取消
+  S.toggleCheckin(d, 'veggie'); // 再点一次取消
   assert.equal(S.getCurrentStreak(), 0);
   assert.equal(S.getStatistics().totalDays, 0);
+});
+
+check('自定义任务：改名不影响历史记录，删除任务会清掉孤立打卡', () => {
+  setCheckin({ [todayKey]: { water: true, gym: true } });
+  assert.equal(S.getTaskCount(), 7);
+
+  // 自定义成 2 个任务
+  const saved = S.saveTasks([
+    { id: 'water', title: '喝水（改名后）', icon: 'droplet' },
+    { id: 'read', title: '阅读 30 分钟', icon: 'book' },
+  ]);
+  assert.equal(saved.ok, true);
+  assert.equal(S.getTaskCount(), 2);
+  // water 的历史记录仍然算数（gym 已不存在，删除任务时会由 prune 清掉）
+  assert.equal(S.countCompleted(S.getCheckinForDate(todayKey)), 2);
+
+  // 删除（这里用 prune 模拟删除任务的清理动作）
+  S.pruneCheckinData(['read']);
+  assert.equal(S.countCompleted(S.getCheckinForDate(todayKey)), 0);
+
+  assert.equal(S.saveTasks([]).ok, false, '不允许清空全部任务');
+  S.resetTasks();
+  assert.equal(S.getTaskCount(), 7);
 });
 
 check('getRecentRecords(count) 返回指定天数且今天在最前', () => {

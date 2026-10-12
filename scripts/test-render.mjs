@@ -30,10 +30,11 @@ import Today from '../../src/pages/Today.jsx';
 import Stats from '../../src/pages/Stats.jsx';
 import Profile from '../../src/pages/Profile.jsx';
 import BackfillSheet from '../../src/components/BackfillSheet.jsx';
-import { TASKS, TASK_TOTAL } from '../../src/data/tasks.js';
+import TaskManagerSheet from '../../src/components/TaskManagerSheet.jsx';
+import { DEFAULT_TASKS, MAX_TASKS } from '../../src/storage/storage.js';
 
 export const render = (C, props) => renderToString(React.createElement(C, props));
-export { App, Today, Stats, Profile, BackfillSheet, TASKS, TASK_TOTAL };
+export { App, Today, Stats, Profile, BackfillSheet, TaskManagerSheet, DEFAULT_TASKS, MAX_TASKS };
 `
 );
 
@@ -93,11 +94,13 @@ const noop = () => {};
 
 const expectations = [
   ['App', mod.App, {}, ['喝水 2L', '今日进度']],
-  ['Today', mod.Today, { showToast: noop }, ['连续打卡', '健身房训练', 'aria-pressed', '补打卡']],
+  ['Today', mod.Today, { showToast: noop }, ['连续打卡', '健身房训练', 'aria-pressed', '补打卡', '任务设置']],
   ['Stats', mod.Stats, { showToast: noop }, ['打卡日历', '最长连续', '本周（周一至周日）', '最近 7 天记录', '体重记录', '点击任意过去日期可直接补打卡']],
-  ['Profile', mod.Profile, { showToast: noop }, ['外观', '跟随系统', APP_VERSION, '数据备份与恢复', 'OriginOS 7 液态玻璃']],
+  ['Profile', mod.Profile, { showToast: noop }, ['外观', '跟随系统', APP_VERSION, '数据备份与恢复', 'OriginOS 7 液态玻璃', '任务设置']],
   ['BackfillSheet', mod.BackfillSheet, { initialDate: null, onClose: noop, onChanged: noop, showToast: noop },
     ['补打卡', '不能补未来', '其他日期', 'type="date"', 'aria-modal="true"']],
+  ['TaskManagerSheet', mod.TaskManagerSheet, { onClose: noop, onChanged: noop, showToast: noop },
+    ['任务设置', '添加任务', '恢复默认任务', 'aria-modal="true"', '喝水 2L']],
 ];
 
 let failed = 0;
@@ -129,15 +132,15 @@ try {
   origError(`FAIL  补打卡入口: ${err.message}`);
 }
 
-// 任务定义必须与 storage 的 TASK_COUNT(7) 一致，防止两边漂移
+// 任务定义必须与 storage 的默认任务一致，防止两边漂移
 try {
-  assert.equal(mod.TASKS.length, 7, 'TASKS 数量应为 7');
-  assert.equal(mod.TASK_TOTAL, 7);
-  assert.ok(mod.TASKS.every((t) => typeof t.Icon === 'function'), '每个任务都要有图标组件');
-  console.log('  ok  TASKS 定义与 TASK_COUNT 一致（7 项）');
+  assert.equal(mod.DEFAULT_TASKS.length, 7, '默认任务应为 7 项');
+  assert.ok(mod.DEFAULT_TASKS.every((t) => t.id && t.title && t.icon), '每个任务都要有 id/title/icon');
+  assert.equal(new Set(mod.DEFAULT_TASKS.map((t) => t.id)).size, 7, '任务 id 必须唯一');
+  console.log('  ok  默认任务定义完整（7 项，id 唯一）');
 } catch (err) {
   failed += 1;
-  origError(`FAIL  TASKS 定义: ${err.message}`);
+  origError(`FAIL  任务定义: ${err.message}`);
 }
 
 // 深色主题偏好下必须能正常渲染

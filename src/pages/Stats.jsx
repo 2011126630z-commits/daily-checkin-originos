@@ -143,7 +143,7 @@ const WEEKDAY_HEAD = ['一', '二', '三', '四', '五', '六', '日'];
 
 // 本月日历热力图:周一为起点,点击某天查看明细
 const MonthCalendar = ({ calendar, onPick }) => {
-  const { days, startOffset, monthLabel, trackedDays, completedTasks, elapsedDays } = calendar;
+  const { days, startOffset, monthLabel, trackedDays, completedTasks, elapsedDays, total } = calendar;
 
   return (
     <section className="originos-card originos-scale-in p-5 mb-5">
@@ -177,7 +177,7 @@ const MonthCalendar = ({ calendar, onPick }) => {
       {/* 图例 */}
       <div className="flex items-center justify-between mt-3">
         <span className="text-[10px] originos-text-light">
-          本月已完成 {completedTasks} / {elapsedDays * TASK_COUNT} 项
+          本月已完成 {completedTasks} / {elapsedDays * total} 项
         </span>
         <span className="flex items-center gap-1 text-[10px] originos-text-light">
           少
@@ -306,7 +306,7 @@ const Stats = ({ showToast, onBackfill, dataVersion = 0 }) => {
         <h2 className="text-base font-medium originos-text mb-4 self-start">本月完成率</h2>
         <RingChart percentage={monthlyRate} />
         <p className="text-xs originos-text-light mt-4">
-          按本月已过去的 {monthSummary.elapsedDays} 天计算 · 平均每天完成 {monthSummary.avgPerDay} / {TASK_COUNT} 项
+          按本月已过去的 {monthSummary.elapsedDays} 天计算 · 平均每天完成 {monthSummary.avgPerDay} / {calendar ? calendar.total : TASK_COUNT} 项
         </p>
       </section>
 

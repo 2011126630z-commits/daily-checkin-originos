@@ -671,6 +671,34 @@ body::after {
   color: var(--origin-blue);
 }
 
+/* ============================================================
+   外观切换过渡（苹果风格圆形扩散）
+   ============================================================ */
+
+/* View Transitions：新旧两帧叠放，由 JS 给新帧做 circle() 扩散 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+
+/* 降级：不支持 View Transitions 时，短暂给所有元素加颜色过渡 */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition:
+    background-color 0.42s ease,
+    color 0.42s ease,
+    border-color 0.42s ease,
+    fill 0.42s ease,
+    stroke 0.42s ease,
+    box-shadow 0.42s ease !important;
+}
+
 /* Mobile Optimization */
 @media (max-width: 640px) {
   body {

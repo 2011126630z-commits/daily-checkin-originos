@@ -45,15 +45,60 @@ export function applyTheme(pref = getThemePreference()) {
   syncMetaThemeColor();
 }
 
-export function setThemePreference(pref) {
+// 降级动画：View Transitions 不可用时，短暂开启全局颜色过渡
+function applyWithFade(apply) {
+  const root = document.documentElement;
+  root.classList.add('theme-transitioning');
+  apply();
+  window.setTimeout(() => root.classList.remove('theme-transitioning'), 460);
+}
+
+// 苹果风格：以点击位置为圆心做圆形扩散，揭开新主题
+function applyWithReveal(apply, origin) {
+  const doc = document;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || typeof doc.startViewTransition !== 'function') {
+    applyWithFade(apply);
+    return;
+  }
+
+  const x = origin && typeof origin.x === 'number' ? origin.x : window.innerWidth / 2;
+  const y = origin && typeof origin.y === 'number' ? origin.y : window.innerHeight / 2;
+  const radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+
+  const transition = doc.startViewTransition(apply);
+  const ready = transition.ready || Promise.resolve();
+  ready
+    .then(() => {
+      doc.documentElement.animate(
+        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${radius}px at ${x}px ${y}px)`] },
+        {
+          duration: 520,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          pseudoElement: '::view-transition-new(root)',
+        }
+      );
+    })
+    .catch(() => {});
+}
+
+export function setThemePreference(pref, origin = null) {
   const next = THEME_VALUES.includes(pref) ? pref : 'system';
+  const changed = getResolvedTheme(next) !== getResolvedTheme(getThemePreference());
   try {
     localStorage.setItem(STORAGE_KEY_THEME, next);
   } catch {
     /* 隐私模式下写入失败时仍然应用当前会话的主题 */
   }
-  applyTheme(next);
-  listeners.forEach((fn) => fn(next));
+
+  const apply = () => {
+    applyTheme(next);
+    listeners.forEach((fn) => fn(next));
+  };
+
+  if (changed) applyWithReveal(apply, origin);
+  else apply();
+
   return next;
 }
 
